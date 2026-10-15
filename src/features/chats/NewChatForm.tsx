@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useGreenApi } from '../../api/useGreenApi'
 import { useInstanceId, useMessenger } from '../../store/authStore'
 import { useChatStore } from '../../store/chatStore'
-import { findChatByPhone } from './startChat'
+import { findChat } from './startChat'
 import styles from './NewChatForm.module.css'
 
 interface NewChatFormProps {
@@ -13,13 +13,16 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
   const client = useGreenApi()
   const messenger = useMessenger()
   const instanceId = useInstanceId()
-  const [phone, setPhone] = useState('')
+  const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const hint = messenger.phone.countryCodes
-    ? `Номера с кодом ${messenger.phone.countryCodes.map((code) => `+${code}`).join(' или ')}`
-    : 'В международном формате, с кодом страны'
+  const { countryCodes } = messenger.phone
+  const hint = countryCodes
+    ? `Номера с кодом ${countryCodes.map((code) => `+${code}`).join(' или ')}`
+    : messenger.supportsUsername
+      ? 'Номер с кодом страны или имя пользователя'
+      : 'В международном формате, с кодом страны'
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -30,7 +33,7 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
     try {
       const { upsertChat, openChat, byInstance } = useChatStore.getState()
       const knownChats = Object.values(byInstance[instanceId]?.chats ?? {})
-      const chat = await findChatByPhone(client, messenger, phone, knownChats)
+      const chat = await findChat(client, messenger, query, knownChats)
       upsertChat(instanceId, chat)
       openChat(instanceId, chat.chatId)
       onClose()
@@ -61,15 +64,22 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <label className={styles.field}>
-          <span className={styles.label}>Номер телефона в {messenger.name}</span>
+          <span className={styles.label}>
+            {messenger.supportsUsername ? 'Номер телефона или @username' : 'Номер телефона'} в{' '}
+            {messenger.name}
+          </span>
           <input
             className={styles.input}
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="+7 999 123-45-67"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            type={messenger.supportsUsername ? 'text' : 'tel'}
+            inputMode={messenger.supportsUsername ? 'text' : 'tel'}
+            autoComplete={messenger.supportsUsername ? 'off' : 'tel'}
+            autoCapitalize="off"
+            spellCheck={false}
+            placeholder={
+              messenger.supportsUsername ? '+7 999 123-45-67 или @username' : '+7 999 123-45-67'
+            }
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             aria-invalid={Boolean(error)}
             aria-describedby="new-chat-hint"
             autoFocus
@@ -83,9 +93,9 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
           </span>
         </label>
 
-        <button className={styles.submit} type="submit" disabled={!phone.trim() || loading}>
+        <button className={styles.submit} type="submit" disabled={!query.trim() || loading}>
           {loading && <span className={styles.spinner} aria-hidden="true" />}
-          {loading ? 'Проверяем номер…' : 'Начать чат'}
+          {loading ? 'Ищем собеседника…' : 'Начать чат'}
         </button>
       </form>
     </section>

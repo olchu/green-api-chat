@@ -6,7 +6,7 @@ import { MESSENGERS } from '../../lib/messengers'
 import type { Chat } from '../../store/chatStore'
 import { apiUrl, testCredentials } from '../../test/fixtures'
 import { server, setupMockServer } from '../../test/server'
-import { findChatByPhone } from './startChat'
+import { findChat, isUsernameQuery } from './startChat'
 
 setupMockServer()
 
@@ -24,11 +24,11 @@ function mockCheckAccount(response: object, status = 200) {
   return () => body
 }
 
-describe('findChatByPhone', () => {
+describe('findChat: по номеру', () => {
   it('проверяет номер и возвращает новый чат', async () => {
     const requestBody = mockCheckAccount({ exist: true, chatId: '555', username: '@anna' })
 
-    await expect(findChatByPhone(client, telegram, '8 999 123-45-67', [])).resolves.toEqual({
+    await expect(findChat(client, telegram, '8 999 123-45-67', [])).resolves.toEqual({
       chatId: '555',
       name: '+7 999 123-45-67',
       phone: '79991234567',
@@ -47,20 +47,21 @@ describe('findChatByPhone', () => {
     }
 
     // Запрос без мока упал бы с ошибкой onUnhandledFrame
-    await expect(findChatByPhone(client, telegram, '+79991234567', [known])).resolves.toBe(known)
+    await expect(findChat(client, telegram, '+79991234567', [known])).resolves.toBe(known)
   })
 
   it('сохраняет имя чата, созданного раньше из входящего сообщения', async () => {
     mockCheckAccount({ exist: true, chatId: '555' })
     const known: Chat = { chatId: '555', name: 'Анна', unread: 0, createdAt: 0 }
 
-    await expect(findChatByPhone(client, telegram, '+79991234567', [known])).resolves.toMatchObject(
-      { name: 'Анна', phone: '79991234567' },
-    )
+    await expect(findChat(client, telegram, '+79991234567', [known])).resolves.toMatchObject({
+      name: 'Анна',
+      phone: '79991234567',
+    })
   })
 
   it('не отправляет запрос с неверным номером', async () => {
-    await expect(findChatByPhone(client, MESSENGERS.max, '+49 151 2345678', [])).rejects.toThrow(
+    await expect(findChat(client, MESSENGERS.max, '+49 151 2345678', [])).rejects.toThrow(
       'Поддерживаются только номера с кодом +7 или +375',
     )
   })
@@ -68,7 +69,7 @@ describe('findChatByPhone', () => {
   it('сообщает, что номер не найден', async () => {
     mockCheckAccount({ exist: false, chatId: '' })
 
-    await expect(findChatByPhone(client, telegram, '+79991234567', [])).rejects.toThrow(
+    await expect(findChat(client, telegram, '+79991234567', [])).rejects.toThrow(
       'Номер не найден в Telegram или скрыт настройками приватности',
     )
   })
@@ -76,7 +77,7 @@ describe('findChatByPhone', () => {
   it('сообщает об ограничении проверок', async () => {
     mockCheckAccount({ status: false, data: { status: 'fail', reason: 'rate_limit_exceeded' } })
 
-    await expect(findChatByPhone(client, telegram, '+79991234567', [])).rejects.toThrow(
+    await expect(findChat(client, telegram, '+79991234567', [])).rejects.toThrow(
       'Telegram временно ограничил проверку номеров',
     )
   })
@@ -84,8 +85,67 @@ describe('findChatByPhone', () => {
   it('сообщает о неавторизованном инстансе', async () => {
     mockCheckAccount({ status: false, reason: 'instance is starting or not authorized' })
 
-    await expect(findChatByPhone(client, MESSENGERS.max, '+79991234567', [])).rejects.toThrow(
+    await expect(findChat(client, MESSENGERS.max, '+79991234567', [])).rejects.toThrow(
       'Инстанс не авторизован',
     )
+  })
+})
+
+describe('findChat: по username', () => {
+  it('ищет по username и добавляет @', async () => {
+    const requestBody = mockCheckAccount({
+      exist: true,
+      chatId: '777',
+      username: '@durov_test',
+      phoneNumber: 79990001122,
+    })
+
+    await expect(findChat(client, telegram, ' durov_test ', [])).resolves.toEqual({
+      chatId: '777',
+      name: '@durov_test',
+      phone: '79990001122',
+      username: '@durov_test',
+    })
+    expect(requestBody()).toEqual({ username: '@durov_test' })
+  })
+
+  it('не проверяет известный username повторно', async () => {
+    const known: Chat = {
+      chatId: '777',
+      name: 'Павел',
+      username: '@Durov_Test',
+      unread: 0,
+      createdAt: 0,
+    }
+
+    await expect(findChat(client, telegram, '@durov_test', [known])).resolves.toBe(known)
+  })
+
+  it('не отправляет запрос с неверным username', async () => {
+    await expect(findChat(client, telegram, '@ab', [])).rejects.toThrow('Имя пользователя')
+    await expect(findChat(client, telegram, '@1abcde', [])).rejects.toThrow('Имя пользователя')
+  })
+
+  it('сообщает, что пользователь не найден', async () => {
+    mockCheckAccount({ exist: false, chatId: '' })
+
+    await expect(findChat(client, telegram, '@nobody_here', [])).rejects.toThrow(
+      'Пользователь @nobody_here не найден в Telegram',
+    )
+  })
+
+  it('в MAX username не поддерживается и ввод проверяется как номер', async () => {
+    await expect(findChat(client, MESSENGERS.max, '@durov_test', [])).rejects.toThrow(
+      'Номер может содержать только цифры',
+    )
+  })
+})
+
+describe('isUsernameQuery', () => {
+  it('отличает username от номера', () => {
+    expect(isUsernameQuery('@anna')).toBe(true)
+    expect(isUsernameQuery('anna_k')).toBe(true)
+    expect(isUsernameQuery('+7 (999) 123-45-67')).toBe(false)
+    expect(isUsernameQuery('8 999 123 45 67')).toBe(false)
   })
 })

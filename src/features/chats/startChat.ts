@@ -1,4 +1,5 @@
 import { GreenApiError, type GreenApiClient } from '../../api/greenApi'
+import type { CheckAccountRequest } from '../../api/types'
 import type { MessengerRules } from '../../lib/messengers'
 import { formatPhone, validatePhone } from '../../lib/phone'
 import type { Chat, NewChat } from '../../store/chatStore'
@@ -25,11 +26,38 @@ function toStartChatError(error: unknown, messenger: MessengerRules): StartChatE
   return new StartChatError(error.message)
 }
 
-/**
- * Находит собеседника по номеру. Известный номер не проверяется повторно:
- * на тарифе Developer проверки ограничены.
- */
-export async function findChatByPhone(
+const USERNAME = /^@[a-z][a-z0-9_]{4,31}$/i
+
+/** Ввод похож на username: начинается с @ или содержит латинские буквы */
+export function isUsernameQuery(input: string): boolean {
+  return /^\s*@|[a-z_]/i.test(input)
+}
+
+/** Проверяет аккаунт через checkAccount и собирает данные нового чата */
+async function checkAccount(
+  client: GreenApiClient,
+  messenger: MessengerRules,
+  request: CheckAccountRequest,
+  notFound: string,
+  knownChats: Chat[],
+  fallback: NewChat,
+): Promise<NewChat> {
+  try {
+    const result = await client.checkAccount(request)
+    if (!result.exist || !result.chatId) throw new StartChatError(notFound)
+    const knownName = knownChats.find((chat) => chat.chatId === result.chatId)?.name
+    return {
+      chatId: result.chatId,
+      name: knownName ?? fallback.name,
+      phone: result.phoneNumber ? String(result.phoneNumber) : fallback.phone,
+      username: result.username || fallback.username,
+    }
+  } catch (error) {
+    throw toStartChatError(error, messenger)
+  }
+}
+
+async function findByPhone(
   client: GreenApiClient,
   messenger: MessengerRules,
   input: string,
@@ -42,22 +70,58 @@ export async function findChatByPhone(
   const known = knownChats.find((chat) => chat.phone === phone)
   if (known) return known
 
-  try {
-    const result = await client.checkAccount({ phoneNumber: validation.phoneNumber })
-    if (!result.exist || !result.chatId) {
-      throw new StartChatError(
-        messenger.supportsUsername
-          ? `Номер не найден в ${messenger.name} или скрыт настройками приватности`
-          : `Номер не зарегистрирован в ${messenger.name}`,
-      )
-    }
-    return {
-      chatId: result.chatId,
-      name: knownChats.find((chat) => chat.chatId === result.chatId)?.name ?? formatPhone(phone),
+  const notFound = messenger.supportsUsername
+    ? `Номер не найден в ${messenger.name} или скрыт настройками приватности`
+    : `Номер не зарегистрирован в ${messenger.name}`
+  return checkAccount(
+    client,
+    messenger,
+    { phoneNumber: validation.phoneNumber },
+    notFound,
+    knownChats,
+    {
+      chatId: '',
+      name: formatPhone(phone),
       phone,
-      username: result.username || undefined,
-    }
-  } catch (error) {
-    throw toStartChatError(error, messenger)
+    },
+  )
+}
+
+async function findByUsername(
+  client: GreenApiClient,
+  messenger: MessengerRules,
+  input: string,
+  knownChats: Chat[],
+): Promise<NewChat> {
+  const username = `@${input.trim().replace(/^@/, '')}`
+  if (!USERNAME.test(username)) {
+    throw new StartChatError(
+      'Имя пользователя: от 5 до 32 латинских букв, цифр и _, начинается с буквы',
+    )
   }
+
+  const known = knownChats.find((chat) => chat.username?.toLowerCase() === username.toLowerCase())
+  if (known) return known
+
+  const notFound = `Пользователь ${username} не найден в ${messenger.name}`
+  return checkAccount(client, messenger, { username }, notFound, knownChats, {
+    chatId: '',
+    name: username,
+    username,
+  })
+}
+
+/**
+ * Находит собеседника по номеру или @username (если мессенджер это поддерживает).
+ * Известные собеседники не проверяются повторно: на тарифе Developer проверки ограничены.
+ */
+export function findChat(
+  client: GreenApiClient,
+  messenger: MessengerRules,
+  input: string,
+  knownChats: Chat[],
+): Promise<NewChat> {
+  return messenger.supportsUsername && isUsernameQuery(input)
+    ? findByUsername(client, messenger, input, knownChats)
+    : findByPhone(client, messenger, input, knownChats)
 }
