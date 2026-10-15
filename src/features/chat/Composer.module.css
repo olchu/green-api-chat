@@ -1,6 +1,7 @@
 .composer {
   flex: none;
-  padding: 0 16px 16px;
+  /* Снизу учитываем полоску жестов iPhone, когда клавиатура скрыта */
+  padding: 0 16px max(16px, env(safe-area-inset-bottom));
 }
 
 .field {
@@ -59,11 +60,6 @@
 
 .send:active:not(:disabled) {
   transform: scale(0.94);
-}
-
-/* Учитываем полоску жестов iPhone, когда клавиатура скрыта */
-.composer {
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 @media (max-width: 767px) {

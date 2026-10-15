@@ -52,10 +52,7 @@ export function formatPhone(phone: string | number): string {
   if (ru) return `+7 ${ru[1]} ${ru[2]}-${ru[3]}-${ru[4]}`
 
   const codeLength = countryCodeLength(digits)
-  const groups: string[] = digits.slice(codeLength).match(/\d{1,3}/g) ?? []
-  // Одну цифру в конце присоединяем к предыдущей группе: 123 4567, а не 123 456 7
-  if (groups.length > 1 && groups.at(-1)!.length === 1) {
-    groups.push(groups.splice(-2).join(''))
-  }
-  return `+${[digits.slice(0, codeLength), ...groups].join(' ')}`
+  // Пробел после каждых трёх цифр, если за ними ещё хотя бы две: 202 555 0123, а не 202 555 012 3
+  const rest = digits.slice(codeLength).replace(/\d{3}(?=\d{2})/g, '$& ')
+  return `+${digits.slice(0, codeLength)} ${rest}`.trim()
 }

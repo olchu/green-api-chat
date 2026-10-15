@@ -19,9 +19,12 @@ export function MessageList({ instanceId, chatId }: MessageListProps) {
   const stickToBottom = useRef(true)
   const [showJump, setShowJump] = useState(false)
 
-  const scrollToBottom = () => {
+  // Плавно — только по кнопке; при открытии чата лента сразу стоит внизу
+  const scrollToBottom = (behavior: ScrollBehavior = 'instant') => {
     const element = scrollRef.current
-    if (element) element.scrollTop = element.scrollHeight
+    if (!element) return
+    if (behavior === 'smooth') element.scrollTo({ top: element.scrollHeight, behavior })
+    else element.scrollTop = element.scrollHeight
   }
 
   // При открытии чата (лента монтируется заново по key) и новом сообщении — к последнему.
@@ -29,12 +32,6 @@ export function MessageList({ instanceId, chatId }: MessageListProps) {
   useLayoutEffect(() => {
     if (stickToBottom.current || lastMessage?.direction === 'out') scrollToBottom()
   }, [lastMessage?.id, lastMessage?.direction])
-
-  // Плавно — только по кнопке; при открытии чата лента сразу стоит внизу
-  const jumpToBottom = () => {
-    const element = scrollRef.current
-    element?.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
-  }
 
   function handleScroll() {
     const element = scrollRef.current
@@ -72,7 +69,7 @@ export function MessageList({ instanceId, chatId }: MessageListProps) {
         <button
           className={styles.jump}
           type="button"
-          onClick={jumpToBottom}
+          onClick={() => scrollToBottom('smooth')}
           aria-label="К последним сообщениям"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
