@@ -1,0 +1,63 @@
+.app {
+  display: grid;
+  grid-template-columns: var(--nav-width) var(--chat-list-width) minmax(0, 1fr);
+  height: 100dvh;
+  background: var(--bg-primary);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--stroke-separator);
+  background: var(--bg-primary);
+}
+
+.sidebarEmpty {
+  margin: auto;
+  padding: 24px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* Фон чата темы «space»: градиент и узор с космонавтами из web.max.ru */
+.chatArea {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--chat-bg-gradient);
+  isolation: isolate;
+}
+
+.chatArea::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--chat-pattern-color);
+  mask: url('../../assets/chat-pattern-space.svg') center / 280px repeat;
+  pointer-events: none;
+}
+
+.hint {
+  margin: auto;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--chat-date-bg);
+  color: var(--text-inverse);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Полная адаптивность — отдельным шагом; пока на узких экранах только список */
+@media (max-width: 767px) {
+  .app {
+    grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  }
+
+  .chatArea {
+    display: none;
+  }
+}
