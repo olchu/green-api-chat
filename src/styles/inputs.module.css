@@ -1,16 +1,18 @@
-/* Поле ввода в стиле MAX: серая подложка, кольцо фокуса. Подключается через composes */
-.field {
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--text-primary);
-}
+/* Поле ввода в стиле MAX. Слой shared уступает любым локальным правилам */
+@layer shared {
+  .field {
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    color: var(--text-primary);
+  }
 
-.field:focus-visible,
-.field:focus-within {
-  box-shadow: 0 0 0 2px var(--color-accent);
-}
+  .field:focus-visible,
+  .field:focus-within {
+    box-shadow: 0 0 0 2px var(--color-accent);
+  }
 
-.field::placeholder,
-.field ::placeholder {
-  color: var(--text-tertiary);
+  .field::placeholder,
+  .field ::placeholder {
+    color: var(--text-tertiary);
+  }
 }

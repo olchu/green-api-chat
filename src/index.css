@@ -1,2 +1,5 @@
+/* Порядок слоёв: reset слабее shared, стили вне слоёв сильнее всех */
+@layer reset, shared;
+
 @import './styles/tokens.css';
 @import './styles/reset.css';

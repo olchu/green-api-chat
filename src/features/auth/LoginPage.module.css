@@ -62,6 +62,6 @@
 
 .submit {
   composes: primary from '../../styles/buttons.module.css';
-  --button-height: 44px;
+  height: 44px;
   margin-top: 8px;
 }

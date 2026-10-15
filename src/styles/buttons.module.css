@@ -1,60 +1,62 @@
-/* Общие кнопки; подключаются через composes, высота меняется через --button-height */
-.primary,
-.secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: var(--button-height, 40px);
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 500;
-  transition:
-    background-color 0.15s,
-    opacity 0.15s;
-}
+/* Общие кнопки; подключаются через composes. Слой shared уступает любым локальным правилам */
+@layer shared {
+  .primary,
+  .secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 500;
+    transition:
+      background-color 0.15s,
+      opacity 0.15s;
+  }
 
-.primary {
-  background: var(--color-accent);
-  color: var(--text-inverse);
-}
+  .primary {
+    background: var(--color-accent);
+    color: var(--text-inverse);
+  }
 
-.primary:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-}
+  .primary:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+  }
 
-.primary:active:not(:disabled) {
-  background: var(--color-accent-pressed);
-}
+  .primary:active:not(:disabled) {
+    background: var(--color-accent-pressed);
+  }
 
-.secondary {
-  color: var(--color-accent);
-}
+  .secondary {
+    color: var(--color-accent);
+  }
 
-.secondary:hover:not(:disabled) {
-  background: var(--bg-selected);
-}
+  .secondary:hover:not(:disabled) {
+    background: var(--bg-selected);
+  }
 
-.primary:disabled,
-.secondary:disabled {
-  opacity: 0.5;
-}
+  .primary:disabled,
+  .secondary:disabled {
+    opacity: 0.5;
+  }
 
-.primary:focus-visible,
-.secondary:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
+  .primary:focus-visible,
+  .secondary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 
-/* Индикатор загрузки внутри кнопки, цвет берётся из текста */
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
-  border-top-color: currentColor;
-  border-radius: var(--radius-full);
-  animation: spin 0.7s linear infinite;
+  /* Индикатор загрузки внутри кнопки, цвет берётся из текста */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+    border-top-color: currentColor;
+    border-radius: var(--radius-full);
+    animation: spin 0.7s linear infinite;
+  }
 }
 
 @keyframes spin {
