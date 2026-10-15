@@ -1,4 +1,3 @@
-import { useGreenApi } from '../../api/useGreenApi'
 import { useInstanceId, useMessenger } from '../../store/authStore'
 import { useActiveChat, useChatStore } from '../../store/chatStore'
 import { ChatHeader } from './ChatHeader'
@@ -10,7 +9,6 @@ import styles from './ChatWindow.module.css'
 export function ChatWindow() {
   const instanceId = useInstanceId()
   const chat = useActiveChat(instanceId)
-  const client = useGreenApi()
   const messenger = useMessenger()
 
   if (!chat) {
@@ -25,7 +23,7 @@ export function ChatWindow() {
       <Composer
         key={chat.chatId}
         maxLength={messenger.maxMessageLength}
-        onSend={(text) => client && void sendChatMessage(client, instanceId, chat.chatId, text)}
+        onSend={(text) => void sendChatMessage(chat.chatId, text)}
       />
     </section>
   )

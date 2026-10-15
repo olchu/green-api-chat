@@ -197,3 +197,38 @@ describe('обновление данных чата', () => {
     })
   })
 })
+
+describe('отправленные сообщения', () => {
+  const local = () =>
+    message({ id: 'local-1', idMessage: undefined, direction: 'out', status: 'pending' })
+
+  it('эхо из уведомления склеивается с локальным сообщением без idMessage', () => {
+    store().addMessage(INSTANCE, local())
+
+    store().addMessage(INSTANCE, message({ id: 'srv-1', idMessage: 'srv-1', direction: 'out' }))
+    store().resolveMessage(INSTANCE, '100', 'local-1', { status: 'sent', idMessage: 'srv-1' })
+
+    expect(messages()).toHaveLength(1)
+    expect(messages()[0]).toMatchObject({ id: 'local-1', idMessage: 'srv-1', status: 'sent' })
+  })
+
+  it('чужое сообщение с тем же текстом с телефона не склеивается с уже отправленным', () => {
+    store().addMessage(INSTANCE, { ...local(), idMessage: 'srv-1', status: 'sent' })
+
+    store().addMessage(INSTANCE, message({ id: 'srv-2', idMessage: 'srv-2', direction: 'out' }))
+
+    expect(messages()).toHaveLength(2)
+  })
+
+  it('ответ sendMessage не откатывает статус, пришедший раньше из уведомления', () => {
+    store().addMessage(INSTANCE, local())
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'srv-1', idMessage: 'srv-1', direction: 'out', status: 'delivered' }),
+    )
+
+    store().resolveMessage(INSTANCE, '100', 'local-1', { status: 'sent', idMessage: 'srv-1' })
+
+    expect(messages()[0].status).toBe('delivered')
+  })
+})

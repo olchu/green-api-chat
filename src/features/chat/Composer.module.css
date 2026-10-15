@@ -51,34 +51,18 @@
 }
 
 .send {
+  composes: primary from '../../styles/buttons.module.css';
   flex: none;
-  display: grid;
-  place-items: center;
   width: 34px;
   height: 34px;
+  padding: 0;
   border-radius: var(--radius-full);
-  background: var(--color-accent);
-  color: var(--text-inverse);
   transition:
     background-color 0.15s,
     opacity 0.15s,
     transform 0.15s;
 }
 
-.send:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-}
-
 .send:active:not(:disabled) {
-  background: var(--color-accent-pressed);
   transform: scale(0.94);
-}
-
-.send:disabled {
-  opacity: 0.4;
-}
-
-.send:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
 }

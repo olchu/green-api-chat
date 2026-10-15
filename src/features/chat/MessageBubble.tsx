@@ -44,7 +44,7 @@ const STATUS_ICONS: Record<MessageStatus, ReactNode> = {
 
 interface MessageBubbleProps {
   message: Message
-  onRetry: (message: Message) => void
+  onRetry: (message: Message) => unknown
 }
 
 export const MessageBubble = memo(function MessageBubble({ message, onRetry }: MessageBubbleProps) {

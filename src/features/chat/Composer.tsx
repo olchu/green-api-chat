@@ -12,9 +12,8 @@ const COUNTER_THRESHOLD = 0.9
 export function Composer({ maxLength, onSend }: ComposerProps) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const message = text.trim()
   const tooLong = text.length > maxLength
-  const canSend = message.length > 0 && !tooLong
+  const canSend = text.trim() !== '' && !tooLong
 
   // Поле растёт по содержимому до max-height из CSS
   useLayoutEffect(() => {
@@ -24,17 +23,20 @@ export function Composer({ maxLength, onSend }: ComposerProps) {
     textarea.style.height = `${textarea.scrollHeight}px`
   }, [text])
 
-  function send(event?: FormEvent) {
-    event?.preventDefault()
+  function send(event: FormEvent) {
+    event.preventDefault()
     if (!canSend) return
-    onSend(message)
+    onSend(text.trim())
     setText('')
     textareaRef.current?.focus()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     // Enter отправляет, Shift+Enter — перенос строки; во время ввода через IME не мешаем
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) send(event)
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+      event.preventDefault()
+      event.currentTarget.form?.requestSubmit()
+    }
   }
 
   return (

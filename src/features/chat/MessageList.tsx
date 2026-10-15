@@ -1,7 +1,6 @@
-import { Fragment, useCallback, useLayoutEffect, useRef } from 'react'
-import { useGreenApi } from '../../api/useGreenApi'
+import { Fragment, useLayoutEffect, useRef } from 'react'
 import { formatDayLabel, startOfDay } from '../../lib/time'
-import { useMessages, type Message } from '../../store/chatStore'
+import { useMessages } from '../../store/chatStore'
 import { MessageBubble } from './MessageBubble'
 import { retryChatMessage } from './sendMessage'
 import styles from './MessageList.module.css'
@@ -15,13 +14,6 @@ export function MessageList({ instanceId, chatId }: MessageListProps) {
   const messages = useMessages(instanceId, chatId)
   const lastMessageId = messages.at(-1)?.id
   const scrollRef = useRef<HTMLDivElement>(null)
-  const client = useGreenApi()
-
-  // Стабильная ссылка, чтобы memo у пузырей работал
-  const retry = useCallback(
-    (message: Message) => client && void retryChatMessage(client, instanceId, message),
-    [client, instanceId],
-  )
 
   // При открытии чата и новом сообщении — к последнему (длина не растёт после лимита)
   useLayoutEffect(() => {
@@ -45,7 +37,7 @@ export function MessageList({ instanceId, chatId }: MessageListProps) {
                     <span className={styles.chip}>{formatDayLabel(message.timestamp)}</span>
                   </li>
                 )}
-                <MessageBubble message={message} onRetry={retry} />
+                <MessageBubble message={message} onRetry={retryChatMessage} />
               </Fragment>
             )
           })}

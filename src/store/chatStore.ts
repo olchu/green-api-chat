@@ -60,6 +60,13 @@ interface ChatState {
   openChat: (instanceId: string, chatId: string | null) => void
   addMessage: (instanceId: string, message: Message) => void
   updateMessage: (instanceId: string, chatId: string, id: string, patch: Partial<Message>) => void
+  /** Итог отправки локального сообщения; статус не откатывается назад */
+  resolveMessage: (
+    instanceId: string,
+    chatId: string,
+    id: string,
+    result: { status: MessageStatus; idMessage?: string },
+  ) => void
   setMessageStatus: (
     instanceId: string,
     chatId: string,
@@ -189,6 +196,27 @@ export const useChatStore = create<ChatState>()(
             )
             if (duplicate) return data
 
+            // Эхо нашего же сообщения из уведомления может прийти раньше ответа sendMessage:
+            // тогда у локального сообщения ещё нет idMessage — склеиваем по тексту
+            if (message.direction === 'out' && message.idMessage) {
+              const echoed = patchMessage(
+                data,
+                chatId,
+                (m) =>
+                  m.direction === 'out' &&
+                  !m.idMessage &&
+                  m.text === message.text &&
+                  (m.status === 'pending' || m.status === 'failed'),
+                (m) => ({
+                  idMessage: message.idMessage,
+                  status: canChangeStatus(m.status ?? 'pending', message.status ?? 'sent')
+                    ? (message.status ?? 'sent')
+                    : m.status,
+                }),
+              )
+              if (echoed !== data) return echoed
+            }
+
             const next = {
               ...data,
               messages: {
@@ -211,6 +239,21 @@ export const useChatStore = create<ChatState>()(
               chatId,
               (m) => m.id === id,
               () => patch,
+            ),
+          ),
+        ),
+
+      resolveMessage: (instanceId, chatId, id, { status, idMessage }) =>
+        set((state) =>
+          updateInstance(state, instanceId, (data) =>
+            patchMessage(
+              data,
+              chatId,
+              (m) => m.id === id,
+              (m) => ({
+                idMessage: m.idMessage ?? idMessage,
+                status: canChangeStatus(m.status ?? 'pending', status) ? status : m.status,
+              }),
             ),
           ),
         ),
