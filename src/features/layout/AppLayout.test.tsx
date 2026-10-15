@@ -14,7 +14,7 @@ describe('AppLayout', () => {
     render(<AppLayout />)
 
     expect(screen.getByRole('heading', { name: 'Чаты' })).toBeInTheDocument()
-    expect(screen.getByText('MAX · +79991234567')).toBeInTheDocument()
+    expect(screen.getByText('MAX · +7 999 123-45-67')).toBeInTheDocument()
   })
 
   it('кнопка «Выйти» завершает сессию', async () => {
