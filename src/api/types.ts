@@ -35,6 +35,12 @@ export interface InstanceSettings {
   keepOnlineStatus: YesNo
 }
 
+export type SetSettingsRequest = Partial<Omit<InstanceSettings, 'wid' | 'typeInstance'>>
+
+export interface SetSettingsResponse {
+  saveSettings: boolean
+}
+
 export interface AccountSettings {
   stateInstance: StateInstance
   phone: string

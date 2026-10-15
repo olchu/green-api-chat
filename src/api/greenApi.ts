@@ -9,6 +9,8 @@ import type {
   ReceiveNotificationResponse,
   SendMessageRequest,
   SendMessageResponse,
+  SetSettingsRequest,
+  SetSettingsResponse,
 } from './types'
 
 /** status 0 — запрос не дошёл до сервера (нет сети, CORS) */
@@ -118,6 +120,10 @@ export function createGreenApiClient(credentials: Credentials) {
       request<GetStateInstanceResponse>('getStateInstance', { signal }),
 
     getSettings: (signal?: AbortSignal) => request<InstanceSettings>('getSettings', { signal }),
+
+    /** Перезапускает инстанс; настройки применяются в течение 5 минут */
+    setSettings: (body: SetSettingsRequest) =>
+      request<SetSettingsResponse>('setSettings', { httpMethod: 'POST', body }),
 
     getAccountSettings: (signal?: AbortSignal) =>
       request<AccountSettings>('getAccountSettings', { signal }),
