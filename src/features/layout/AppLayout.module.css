@@ -12,13 +12,6 @@
   border-right: 1px solid var(--stroke-separator);
 }
 
-.sidebarEmpty {
-  margin: auto;
-  padding: 24px;
-  color: var(--text-tertiary);
-  text-align: center;
-}
-
 /* Фон чата темы «space»: градиент и узор с космонавтами из web.max.ru */
 .chatArea {
   position: relative;
