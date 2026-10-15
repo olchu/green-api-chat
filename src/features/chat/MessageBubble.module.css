@@ -1,0 +1,56 @@
+.row {
+  display: flex;
+}
+
+.row[data-direction='out'] {
+  justify-content: flex-end;
+}
+
+.bubble {
+  --bubble-bg: var(--bubble-in-bg);
+  --bubble-text: var(--bubble-in-text);
+  --bubble-time: var(--bubble-in-time);
+
+  max-width: min(75%, 560px);
+  padding: 7px 10px 6px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bubble-bg);
+  color: var(--bubble-text);
+  box-shadow: 0 1px 1px #0c0d0e0d;
+}
+
+.row[data-direction='out'] .bubble {
+  --bubble-bg: var(--bubble-out-bg);
+  --bubble-text: var(--bubble-out-text);
+  --bubble-time: var(--bubble-out-time);
+}
+
+/* Время плавает справа внизу и не перекрывает последнюю строку текста */
+.text {
+  display: inline;
+  font-size: 15px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  float: right;
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  margin: 6px 0 -2px 10px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--bubble-time);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.status {
+  color: var(--bubble-time);
+}
+
+.bubble[data-status='read'] .status {
+  color: var(--bubble-out-status);
+}

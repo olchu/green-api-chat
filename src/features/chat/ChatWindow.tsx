@@ -1,0 +1,24 @@
+import { useInstanceId } from '../../store/authStore'
+import { useActiveChatId, useChatStore } from '../../store/chatStore'
+import { ChatHeader } from './ChatHeader'
+import { MessageList } from './MessageList'
+import styles from './ChatWindow.module.css'
+
+export function ChatWindow() {
+  const instanceId = useInstanceId()
+  const chatId = useActiveChatId(instanceId)
+  const chat = useChatStore((state) =>
+    chatId ? state.byInstance[instanceId]?.chats[chatId] : undefined,
+  )
+
+  if (!chat) {
+    return <span className={styles.hint}>Выберите чат, чтобы начать переписку</span>
+  }
+
+  return (
+    <section className={styles.window} aria-label={`Чат с ${chat.name}`}>
+      <ChatHeader chat={chat} onClose={() => useChatStore.getState().openChat(instanceId, null)} />
+      <MessageList instanceId={instanceId} chatId={chat.chatId} />
+    </section>
+  )
+}

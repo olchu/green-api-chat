@@ -1,3 +1,4 @@
+import { ChatWindow } from '../chat/ChatWindow'
 import { useActiveChatInfo } from '../chats/useActiveChatInfo'
 import { NavRail } from './NavRail'
 import { Sidebar } from './Sidebar'
@@ -15,7 +16,7 @@ export function AppLayout() {
       </aside>
 
       <main className={styles.chatArea}>
-        <span className={styles.hint}>Выберите чат, чтобы начать переписку</span>
+        <ChatWindow />
       </main>
     </div>
   )

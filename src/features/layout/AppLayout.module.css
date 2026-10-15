@@ -33,16 +33,6 @@
   pointer-events: none;
 }
 
-.hint {
-  margin: auto;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  background: var(--chat-date-bg);
-  color: var(--text-inverse);
-  font-size: 14px;
-  font-weight: 500;
-}
-
 /* Полная адаптивность — отдельным шагом; пока на узких экранах только список */
 @media (max-width: 767px) {
   .app {
