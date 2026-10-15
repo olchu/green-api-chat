@@ -1,6 +1,5 @@
-import { ChatList } from '../chats/ChatList'
 import { NavRail } from './NavRail'
-import { SidebarHeader } from './SidebarHeader'
+import { Sidebar } from './Sidebar'
 import styles from './AppLayout.module.css'
 
 export function AppLayout() {
@@ -9,8 +8,7 @@ export function AppLayout() {
       <NavRail />
 
       <aside className={styles.sidebar}>
-        <SidebarHeader />
-        <ChatList />
+        <Sidebar />
       </aside>
 
       <main className={styles.chatArea}>
