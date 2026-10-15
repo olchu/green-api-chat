@@ -26,9 +26,11 @@ function ChatsIcon() {
         fill="currentColor"
         d="M12 3.5c-4.97 0-9 3.47-9 7.75 0 2.2 1.07 4.18 2.79 5.6-.17 1.2-.7 2.3-1.5 3.13a.5.5 0 0 0 .38.84c1.8-.05 3.4-.7 4.62-1.67.86.2 1.77.3 2.71.3 4.97 0 9-3.47 9-7.75S16.97 3.5 12 3.5Z"
       />
-      <circle cx="8" cy="11.25" r="1.25" fill="var(--rail-icon-dots, #fff)" />
-      <circle cx="12" cy="11.25" r="1.25" fill="var(--rail-icon-dots, #fff)" />
-      <circle cx="16" cy="11.25" r="1.25" fill="var(--rail-icon-dots, #fff)" />
+      <g fill="#fff">
+        <circle cx="8" cy="11.25" r="1.25" />
+        <circle cx="12" cy="11.25" r="1.25" />
+        <circle cx="16" cy="11.25" r="1.25" />
+      </g>
     </svg>
   )
 }

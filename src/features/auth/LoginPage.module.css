@@ -71,23 +71,7 @@
 }
 
 .submit {
-  height: 44px;
+  composes: primary from '../../styles/buttons.module.css';
+  --button-height: 44px;
   margin-top: 8px;
-  border-radius: var(--radius-md);
-  background: var(--color-accent);
-  color: var(--text-inverse);
-  font-weight: 500;
-  transition: background-color 0.15s;
-}
-
-.submit:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-}
-
-.submit:active:not(:disabled) {
-  background: var(--color-accent-pressed);
-}
-
-.submit:disabled {
-  opacity: 0.5;
 }

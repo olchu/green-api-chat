@@ -1,20 +1,18 @@
 .banner {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --attention-bg: #fff4cc;
-  --attention-fg: #8a6200;
-  --positive-bg: #ddf7e3;
-  --positive-fg: #0f7a2b;
+  /* Отступ от краёв окна */
+  --gap: 16px;
+  /* Отступ содержимого под иконкой: ширина иконки + промежуток */
+  --indent: 58px;
 
   /* Плавает поверх интерфейса в правом верхнем углу */
   position: fixed;
-  top: 16px;
-  right: 16px;
+  top: var(--gap);
+  right: var(--gap);
   z-index: 100;
-  width: min(440px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
+  width: min(440px, calc(100vw - 2 * var(--gap)));
+  max-height: calc(100dvh - 2 * var(--gap));
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
   padding: 20px 20px 16px;
   border-radius: var(--radius-lg);
   background: var(--bg-primary);
@@ -90,7 +88,7 @@
 }
 
 .list {
-  margin: 16px 0 0 58px;
+  margin: 16px 0 0 var(--indent);
 }
 
 .row {
@@ -141,7 +139,7 @@
 }
 
 .error {
-  margin: 4px 0 0 58px;
+  margin: 4px 0 0 var(--indent);
   font-size: 14px;
   line-height: 19px;
   color: var(--color-negative);
@@ -151,85 +149,26 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 16px 0 0 58px;
-}
-
-.primary,
-.secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 500;
-  transition:
-    background-color 0.15s,
-    opacity 0.15s;
+  margin: 16px 0 0 var(--indent);
 }
 
 .primary {
-  background: var(--color-accent);
-  color: var(--text-inverse);
-}
-
-.primary:hover:not(:disabled) {
-  background: var(--color-accent-hover);
-}
-
-.primary:active:not(:disabled) {
-  background: var(--color-accent-pressed);
+  composes: primary from '../../styles/buttons.module.css';
 }
 
 .secondary {
-  color: var(--color-accent);
-}
-
-.secondary:hover:not(:disabled) {
-  background: var(--bg-selected);
-}
-
-.primary:disabled,
-.secondary:disabled {
-  opacity: 0.6;
-}
-
-.primary:focus-visible,
-.secondary:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  composes: secondary from '../../styles/buttons.module.css';
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #ffffff59;
-  border-top-color: var(--text-inverse);
-  border-radius: var(--radius-full);
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(1turn);
-  }
+  composes: spinner from '../../styles/buttons.module.css';
 }
 
 @media (max-width: 480px) {
   .banner {
-    top: 12px;
-    right: 12px;
-    width: calc(100vw - 24px);
-    max-height: calc(100dvh - 24px);
+    --gap: 12px;
+    --indent: 0px;
     padding: 16px;
-  }
-
-  .list,
-  .error,
-  .actions {
-    margin-left: 0;
   }
 
   .actions {

@@ -1,7 +1,6 @@
 .rail {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 4px;
   padding: 12px 6px;
   border-right: 1px solid var(--stroke-separator);

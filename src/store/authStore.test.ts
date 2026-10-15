@@ -1,16 +1,7 @@
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useAuthStore, useMessenger, type Session } from './authStore'
-
-const session: Session = {
-  credentials: {
-    apiUrl: 'https://4100.api.green-api.com',
-    idInstance: '4100000001',
-    apiTokenInstance: 'token123',
-  },
-  typeInstance: 'telegram',
-  account: { phone: '79991234567', chatId: '10000000', avatar: '' },
-}
+import { testSession as session } from '../test/fixtures'
+import { useAuthStore, useMessenger } from './authStore'
 
 const STORAGE_KEY = useAuthStore.persist.getOptions().name!
 

@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { http, HttpResponse } from 'msw/http'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { server, setupMockServer } from '../../test/server'
+import { apiUrl } from '../../test/fixtures'
 import { deriveApiUrl, login } from './login'
 
-const base = 'https://4100.api.green-api.com/waInstance4100000001'
 const input = {
   apiUrl: 'https://4100.api.green-api.com/',
   idInstance: ' 4100000001',
@@ -19,24 +19,20 @@ const account = {
   avatar: 'https://example.com/a.jpg',
 }
 
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+setupMockServer()
 
 function mockInstance(options: { account?: object | null; state?: string; status?: number }) {
   const { status = 200 } = options
   server.use(
-    http.get(`${base}/getSettings/token123`, () =>
+    http.get(apiUrl('getSettings'), () =>
       status === 200 ? HttpResponse.json(settings) : new HttpResponse(null, { status }),
     ),
-    http.get(`${base}/getAccountSettings/token123`, () =>
+    http.get(apiUrl('getAccountSettings'), () =>
       options.account
         ? HttpResponse.json(options.account)
         : new HttpResponse(null, { status: 404 }),
     ),
-    http.get(`${base}/getStateInstance/token123`, () =>
+    http.get(apiUrl('getStateInstance'), () =>
       HttpResponse.json({ stateInstance: options.state ?? 'authorized' }),
     ),
   )
@@ -88,7 +84,7 @@ describe('login', () => {
 
   it('сообщает об ошибке сети', async () => {
     mockInstance({ account })
-    server.use(http.get(`${base}/getSettings/token123`, () => HttpResponse.error()))
+    server.use(http.get(apiUrl('getSettings'), () => HttpResponse.error()))
 
     await expect(login(input)).rejects.toThrow('Не удалось подключиться к серверу')
   })

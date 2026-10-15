@@ -1,17 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { server, setupMockServer } from '../../test/server'
+import { apiUrl } from '../../test/fixtures'
 import { useAuthStore } from '../../store/authStore'
 import { LoginPage } from './LoginPage'
 
-const base = 'https://4100.api.green-api.com/waInstance4100000001'
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+setupMockServer()
 beforeEach(() => {
   localStorage.clear()
   useAuthStore.setState({ session: null })
@@ -47,8 +43,8 @@ describe('LoginPage', () => {
 
   it('сохраняет сессию после успешной проверки', async () => {
     server.use(
-      http.get(`${base}/getSettings/token123`, () => HttpResponse.json({ typeInstance: 'v3' })),
-      http.get(`${base}/getAccountSettings/token123`, () =>
+      http.get(apiUrl('getSettings'), () => HttpResponse.json({ typeInstance: 'v3' })),
+      http.get(apiUrl('getAccountSettings'), () =>
         HttpResponse.json({ stateInstance: 'authorized', phone: '1', chatId: '2', avatar: '' }),
       ),
     )
@@ -61,11 +57,8 @@ describe('LoginPage', () => {
 
   it('показывает ошибку и позволяет повторить', async () => {
     server.use(
-      http.get(`${base}/getSettings/token123`, () => new HttpResponse(null, { status: 401 })),
-      http.get(
-        `${base}/getAccountSettings/token123`,
-        () => new HttpResponse(null, { status: 401 }),
-      ),
+      http.get(apiUrl('getSettings'), () => new HttpResponse(null, { status: 401 })),
+      http.get(apiUrl('getAccountSettings'), () => new HttpResponse(null, { status: 401 })),
     )
     const user = await fillForm()
 

@@ -1,14 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { InstanceSettings } from '../../api/types'
-import { findSettingsProblems } from './instanceSettings'
+import { findSettingsProblems, REQUIRED_SETTINGS } from './instanceSettings'
 
-const okSettings = {
-  webhookUrl: '',
-  incomingWebhook: 'yes',
-  outgoingMessageWebhook: 'yes',
-  outgoingWebhook: 'yes',
-} as InstanceSettings
+const okSettings = REQUIRED_SETTINGS as InstanceSettings
 
 describe('findSettingsProblems', () => {
   it('нет проблем при правильных настройках', () => {

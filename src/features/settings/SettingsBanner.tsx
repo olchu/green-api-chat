@@ -12,12 +12,17 @@ const SETTING_LABELS: Record<RequiredSetting, string> = {
   outgoingWebhook: 'Статусы доставки',
 }
 
+const FIX_BUTTON_LABEL: Record<Exclude<Status, 'saved'>, string> = {
+  idle: 'Включить уведомления',
+  saving: 'Сохраняем…',
+  error: 'Повторить',
+}
+
 /** Предупреждает, если настройки инстанса мешают получать сообщения */
 export function SettingsBanner() {
   const client = useGreenApi()
   const [problems, setProblems] = useState<RequiredSetting[]>([])
   const [status, setStatus] = useState<Status>('idle')
-  const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
     if (!client) return
@@ -30,7 +35,7 @@ export function SettingsBanner() {
     return () => controller.abort()
   }, [client])
 
-  if (!client || problems.length === 0 || dismissed) return null
+  if (!client || problems.length === 0) return null
 
   const fix = async () => {
     setStatus('saving')
@@ -42,6 +47,7 @@ export function SettingsBanner() {
     }
   }
 
+  const dismiss = () => setProblems([])
   const saved = status === 'saved'
   const saving = status === 'saving'
 
@@ -90,21 +96,16 @@ export function SettingsBanner() {
 
       <div className={styles.actions}>
         {saved ? (
-          <button className={styles.primary} type="button" onClick={() => setDismissed(true)}>
+          <button className={styles.primary} type="button" onClick={dismiss}>
             Готово
           </button>
         ) : (
           <>
             <button className={styles.primary} type="button" onClick={fix} disabled={saving}>
               {saving && <span className={styles.spinner} aria-hidden="true" />}
-              {saving ? 'Сохраняем…' : status === 'error' ? 'Повторить' : 'Включить уведомления'}
+              {FIX_BUTTON_LABEL[status]}
             </button>
-            <button
-              className={styles.secondary}
-              type="button"
-              onClick={() => setDismissed(true)}
-              disabled={saving}
-            >
+            <button className={styles.secondary} type="button" onClick={dismiss} disabled={saving}>
               Не сейчас
             </button>
           </>

@@ -1,20 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { setupServer } from 'msw/node'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { useAuthStore } from './store/authStore'
+import { apiUrl, testSession } from './test/fixtures'
+import { server, setupMockServer } from './test/server'
 
-const server = setupServer(
-  http.get('https://api.test/waInstance1/getSettings/t', () => HttpResponse.json({})),
-)
-
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
-afterAll(() => server.close())
+setupMockServer()
 beforeEach(() => {
   localStorage.clear()
   useAuthStore.setState({ session: null })
+  server.use(http.get(apiUrl('getSettings'), () => HttpResponse.json({})))
 })
 
 describe('App', () => {
@@ -25,13 +22,7 @@ describe('App', () => {
   })
 
   it('с сессией позволяет выйти', async () => {
-    useAuthStore.setState({
-      session: {
-        credentials: { apiUrl: 'https://api.test', idInstance: '1', apiTokenInstance: 't' },
-        typeInstance: 'telegram',
-        account: null,
-      },
-    })
+    useAuthStore.setState({ session: testSession })
     render(<App />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Выйти' }))

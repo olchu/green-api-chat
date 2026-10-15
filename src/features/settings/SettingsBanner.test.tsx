@@ -1,42 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { server, setupMockServer } from '../../test/server'
+import { apiUrl, testSession } from '../../test/fixtures'
 import { useAuthStore } from '../../store/authStore'
+import { REQUIRED_SETTINGS } from './instanceSettings'
 import { SettingsBanner } from './SettingsBanner'
 
-const base = 'https://4100.api.green-api.com/waInstance4100000001'
-const server = setupServer()
-
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
+setupMockServer()
 beforeEach(() => {
-  useAuthStore.setState({
-    session: {
-      credentials: {
-        apiUrl: 'https://4100.api.green-api.com',
-        idInstance: '4100000001',
-        apiTokenInstance: 'token123',
-      },
-      typeInstance: 'telegram',
-      account: null,
-    },
-  })
+  useAuthStore.setState({ session: testSession })
 })
 
 function mockSettings(settings: object) {
   server.use(
-    http.get(`${base}/getSettings/token123`, () =>
-      HttpResponse.json({
-        webhookUrl: '',
-        incomingWebhook: 'yes',
-        outgoingMessageWebhook: 'yes',
-        outgoingWebhook: 'yes',
-        ...settings,
-      }),
-    ),
+    http.get(apiUrl('getSettings'), () => HttpResponse.json({ ...REQUIRED_SETTINGS, ...settings })),
   )
 }
 
@@ -59,7 +38,7 @@ describe('SettingsBanner', () => {
     let saved: unknown
     mockSettings({ incomingWebhook: 'no' })
     server.use(
-      http.post(`${base}/setSettings/token123`, async ({ request }) => {
+      http.post(apiUrl('setSettings'), async ({ request }) => {
         saved = await request.json()
         return HttpResponse.json({ saveSettings: true })
       }),
@@ -72,19 +51,12 @@ describe('SettingsBanner', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent('Настройки сохранены')
     expect(screen.getByText('вкл')).toBeInTheDocument()
-    expect(saved).toEqual({
-      webhookUrl: '',
-      incomingWebhook: 'yes',
-      outgoingMessageWebhook: 'yes',
-      outgoingWebhook: 'yes',
-    })
+    expect(saved).toEqual(REQUIRED_SETTINGS)
   })
 
   it('сообщает об ошибке сохранения', async () => {
     mockSettings({ webhookUrl: 'https://example.com' })
-    server.use(
-      http.post(`${base}/setSettings/token123`, () => new HttpResponse(null, { status: 500 })),
-    )
+    server.use(http.post(apiUrl('setSettings'), () => new HttpResponse(null, { status: 500 })))
     render(<SettingsBanner />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Включить уведомления' }))

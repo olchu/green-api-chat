@@ -10,7 +10,6 @@
   flex-direction: column;
   min-height: 0;
   border-right: 1px solid var(--stroke-separator);
-  background: var(--bg-primary);
 }
 
 .sidebarEmpty {

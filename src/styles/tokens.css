@@ -8,7 +8,10 @@
   --color-accent-pressed: #006be0;
   --color-negative: #ff303c;
   --color-positive: #1abe43;
-  --color-attention: #fc0;
+  --attention-bg: #fff4cc;
+  --attention-fg: #8a6200;
+  --positive-bg: #ddf7e3;
+  --positive-fg: #0f7a2b;
 
   --bg-primary: #fff;
   --bg-secondary: #f5f7fa;

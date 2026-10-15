@@ -2,16 +2,11 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAuthStore } from '../../store/authStore'
+import { testSession } from '../../test/fixtures'
 import { AppLayout } from './AppLayout'
 
 beforeEach(() => {
-  useAuthStore.setState({
-    session: {
-      credentials: { apiUrl: 'https://api.test', idInstance: '1', apiTokenInstance: 't' },
-      typeInstance: 'v3',
-      account: { phone: '79991234567', chatId: '1', avatar: '' },
-    },
-  })
+  useAuthStore.setState({ session: { ...testSession, typeInstance: 'v3' } })
 })
 
 describe('AppLayout', () => {
