@@ -4,6 +4,7 @@ import type {
   CheckAccountResponse,
   Credentials,
   DeleteNotificationResponse,
+  GetContactInfoResponse,
   GetStateInstanceResponse,
   InstanceSettings,
   ReceiveNotificationResponse,
@@ -127,6 +128,13 @@ export function createGreenApiClient(credentials: Credentials) {
 
     getAccountSettings: (signal?: AbortSignal) =>
       request<AccountSettings>('getAccountSettings', { signal }),
+
+    getContactInfo: (chatId: string, signal?: AbortSignal) =>
+      request<GetContactInfoResponse>('getContactInfo', {
+        httpMethod: 'POST',
+        body: { chatId },
+        signal,
+      }),
 
     checkAccount: (body: CheckAccountRequest) =>
       request<CheckAccountResponse>('checkAccount', { httpMethod: 'POST', body }),

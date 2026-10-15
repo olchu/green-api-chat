@@ -23,11 +23,15 @@ export interface Chat {
   name: string
   phone?: string
   username?: string
+  /** Ссылка на фото профиля */
+  avatar?: string
+  /** Данные контакта уже загружены через getContactInfo */
+  infoLoaded?: boolean
   unread: number
   createdAt: number
 }
 
-export type NewChat = Pick<Chat, 'chatId' | 'name' | 'phone' | 'username'>
+export type NewChat = Pick<Chat, 'chatId' | 'name' | 'phone' | 'username' | 'avatar'>
 
 export interface ChatListEntry {
   chat: Chat
@@ -50,6 +54,7 @@ interface ChatState {
   /** Открытый чат вместе с инстансом: после смены инстанса он просто не совпадёт */
   active: ActiveChat | null
   upsertChat: (instanceId: string, chat: NewChat) => void
+  updateChat: (instanceId: string, chatId: string, patch: Partial<Chat>) => void
   openChat: (instanceId: string, chatId: string | null) => void
   addMessage: (instanceId: string, message: Message) => void
   updateMessage: (instanceId: string, chatId: string, id: string, patch: Partial<Message>) => void
@@ -94,6 +99,13 @@ function updateInstance(
   return next === data ? state : { byInstance: { ...state.byInstance, [instanceId]: next } }
 }
 
+/** Пропущенные поля не должны затирать уже известные данные */
+function withoutUndefined<T extends object>(value: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, field]) => field !== undefined),
+  ) as Partial<T>
+}
+
 function patchChat(
   data: InstanceChats,
   chatId: string,
@@ -134,10 +146,17 @@ export const useChatStore = create<ChatState>()(
           updateInstance(state, instanceId, (data) => {
             const existing = data.chats[chat.chatId]
             const next: Chat = existing
-              ? { ...existing, ...chat }
+              ? { ...existing, ...withoutUndefined(chat) }
               : { ...chat, unread: 0, createdAt: Date.now() }
             return { ...data, chats: { ...data.chats, [chat.chatId]: next } }
           }),
+        ),
+
+      updateChat: (instanceId, chatId, patch) =>
+        set((state) =>
+          updateInstance(state, instanceId, (data) =>
+            patchChat(data, chatId, () => withoutUndefined(patch)),
+          ),
         ),
 
       openChat: (instanceId, chatId) =>

@@ -61,6 +61,21 @@ export interface CheckAccountResponse {
   phoneNumber?: number
 }
 
+export interface GetContactInfoResponse {
+  chatId: string
+  /** Имя из профиля мессенджера */
+  name: string
+  /** Имя из записной книжки, если контакт сохранён */
+  contactName: string
+  /** Пусто, если фото нет или скрыто настройками приватности */
+  avatar: string
+  chatType?: ChatType
+  /** 0, если номер скрыт */
+  phoneNumber?: number
+  /** Только Telegram */
+  username?: string
+}
+
 export interface SendMessageRequest {
   chatId: string
   message: string

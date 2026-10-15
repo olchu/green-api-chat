@@ -26,7 +26,7 @@ export const ChatListItem = memo(function ChatListItem({
         aria-current={active || undefined}
         onClick={() => onSelect(chat.chatId)}
       >
-        <Avatar id={chat.chatId} name={chat.name} />
+        <Avatar id={chat.chatId} name={chat.name} src={chat.avatar} />
         <span className={styles.body}>
           <span className={styles.top}>
             <span className={styles.name}>{chat.name}</span>

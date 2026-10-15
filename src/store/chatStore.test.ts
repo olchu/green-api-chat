@@ -176,3 +176,27 @@ describe('открытый чат', () => {
     expect(store().byInstance['другой'].chats['100'].unread).toBe(1)
   })
 })
+
+describe('обновление данных чата', () => {
+  it('upsertChat не затирает известные поля пустыми', () => {
+    store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', username: undefined })
+
+    expect(chat()).toMatchObject({ name: 'Анна', phone: '79991234567' })
+  })
+
+  it('updateChat дополняет чат данными контакта', () => {
+    store().updateChat(INSTANCE, '100', {
+      name: 'Анна Смирнова',
+      avatar: 'https://example.com/a.jpg',
+      phone: undefined,
+      infoLoaded: true,
+    })
+
+    expect(chat()).toMatchObject({
+      name: 'Анна Смирнова',
+      avatar: 'https://example.com/a.jpg',
+      phone: '79991234567',
+      infoLoaded: true,
+    })
+  })
+})
