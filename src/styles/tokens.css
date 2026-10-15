@@ -1,0 +1,59 @@
+/* Палитра светлой темы «space» из web.max.ru */
+:root {
+  --font:
+    -apple-system, BlinkMacSystemFont, 'Roboto', system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  --color-accent: #007aff;
+  --color-accent-hover: #479fff;
+  --color-accent-pressed: #006be0;
+  --color-negative: #ff303c;
+  --color-positive: #1abe43;
+
+  --bg-primary: #fff;
+  --bg-secondary: #f5f7fa;
+  --bg-surface: #edeef2;
+  --bg-input: #09090914;
+  --bg-hover: #f6f6f6;
+  --bg-selected: #007aff14;
+  --bg-overlay: #0c0d0e52;
+
+  --text-primary: #060708;
+  --text-secondary: #060708ad;
+  --text-tertiary: #06070885;
+  --text-inverse: #fff;
+
+  --icon-primary: #060708d6;
+  --icon-secondary: #060708a3;
+
+  --stroke-separator: #9da4ac4d;
+
+  --bubble-in-bg: #fff;
+  --bubble-in-text: #060708;
+  --bubble-in-time: #06070885;
+  --bubble-out-bg: #e9fdff;
+  --bubble-out-text: #011c29;
+  --bubble-out-time: #0784b8;
+  --bubble-out-status: #0f8ec2;
+
+  --chat-bg-gradient: linear-gradient(28deg, #99d5d7 8.03%, #80bcff 91.51%);
+  --chat-pattern-color: #007aff4d;
+  --chat-date-bg: #0f8ec2a3;
+
+  --writebar-bg: #fff;
+  --writebar-stroke: #0c0d0e0f;
+
+  --avatar-sky: linear-gradient(135deg, #08d7f3, #5398ff);
+  --avatar-violet: linear-gradient(135deg, #bf97ff, #526eff);
+  --avatar-green: linear-gradient(135deg, #14e1d5, #03c722);
+  --avatar-orange: linear-gradient(135deg, #ffc93d, #ff832a);
+  --avatar-coral: linear-gradient(135deg, #ff48b6, #ff8a35);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --nav-width: 72px;
+  --chat-list-width: 380px;
+  --app-max-width: 1280px;
+}
