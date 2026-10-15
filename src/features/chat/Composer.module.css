@@ -17,12 +17,6 @@
     0 2px 8px #0c0d0e14;
 }
 
-.field:focus-within {
-  box-shadow:
-    0 0 0 1px var(--color-accent),
-    0 2px 8px #0c0d0e14;
-}
-
 .input {
   flex: 1;
   min-width: 0;
