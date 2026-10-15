@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAuthStore } from '../../store/authStore'
 import { useChatStore } from '../../store/chatStore'
-import { testCredentials, testSession } from '../../test/fixtures'
+import { testCredentials, testMessage, testSession } from '../../test/fixtures'
 import { ChatList } from './ChatList'
 
 const INSTANCE = testCredentials.idInstance
@@ -16,21 +16,18 @@ beforeEach(() => {
 function seed() {
   store().upsertChat(INSTANCE, { chatId: '1', name: 'Анна', phone: '79991112233' })
   store().upsertChat(INSTANCE, { chatId: '2', name: 'Борис', username: '@boris' })
-  store().addMessage(INSTANCE, {
-    id: 'a',
-    chatId: '1',
-    text: 'Привет!',
-    timestamp: Date.now(),
-    direction: 'in',
-  })
-  store().addMessage(INSTANCE, {
-    id: 'b',
-    chatId: '2',
-    text: 'Как дела?',
-    timestamp: Date.now() - 1000,
-    direction: 'out',
-    status: 'sent',
-  })
+  store().addMessage(INSTANCE, testMessage({ id: 'a', text: 'Привет!' }))
+  store().addMessage(
+    INSTANCE,
+    testMessage({
+      id: 'b',
+      chatId: '2',
+      text: 'Как дела?',
+      timestamp: Date.now() - 1000,
+      direction: 'out',
+      status: 'sent',
+    }),
+  )
 }
 
 describe('ChatList', () => {

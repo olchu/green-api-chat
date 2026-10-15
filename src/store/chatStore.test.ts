@@ -8,35 +8,26 @@ import {
   useMessages,
   type Message,
 } from './chatStore'
-import { testCredentials } from '../test/fixtures'
+import { testCredentials, testMessage } from '../test/fixtures'
 
 const INSTANCE = testCredentials.idInstance
 const store = () => useChatStore.getState()
 const chat = (instanceId = INSTANCE) => store().byInstance[instanceId]?.chats['100']
 const messages = (instanceId = INSTANCE) => store().byInstance[instanceId]?.messages['100'] ?? []
 
-function message(overrides: Partial<Message> = {}): Message {
-  return {
-    id: 'm1',
-    idMessage: 'm1',
-    chatId: '100',
-    text: 'Привет',
-    timestamp: 1000,
-    direction: 'in',
-    ...overrides,
-  }
-}
+const message = (overrides: Partial<Message> = {}) =>
+  testMessage({ chatId: '100', timestamp: 1000, ...overrides })
 
 beforeEach(() => {
   store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', phone: '79991234567' })
 })
 
 describe('chatStore', () => {
-  it('upsertChat обновляет данные чата, не сбрасывая непрочитанные', () => {
+  it('upsertChat дополняет чат, не сбрасывая непрочитанные', () => {
     store().addMessage(INSTANCE, message())
-    store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна Иванова' })
+    store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', username: '@anna' })
 
-    expect(chat()).toMatchObject({ name: 'Анна Иванова', phone: '79991234567', unread: 1 })
+    expect(chat()).toMatchObject({ username: '@anna', phone: '79991234567', unread: 1 })
   })
 
   it('addMessage пропускает дубли по id и idMessage', () => {
@@ -178,6 +169,12 @@ describe('открытый чат', () => {
 })
 
 describe('обновление данных чата', () => {
+  it('upsertChat не меняет имя существующего чата, но дополняет данные', () => {
+    store().upsertChat(INSTANCE, { chatId: '100', name: '+7 999 123-45-67', username: '@anna' })
+
+    expect(chat()).toMatchObject({ name: 'Анна', username: '@anna' })
+  })
+
   it('upsertChat не затирает известные поля пустыми', () => {
     store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', username: undefined })
 

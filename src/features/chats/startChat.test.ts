@@ -50,16 +50,6 @@ describe('findChat: по номеру', () => {
     await expect(findChat(client, telegram, '+79991234567', [known])).resolves.toBe(known)
   })
 
-  it('сохраняет имя чата, созданного раньше из входящего сообщения', async () => {
-    mockCheckAccount({ exist: true, chatId: '555' })
-    const known: Chat = { chatId: '555', name: 'Анна', unread: 0, createdAt: 0 }
-
-    await expect(findChat(client, telegram, '+79991234567', [known])).resolves.toMatchObject({
-      name: 'Анна',
-      phone: '79991234567',
-    })
-  })
-
   it('не отправляет запрос с неверным номером', async () => {
     await expect(findChat(client, MESSENGERS.max, '+49 151 2345678', [])).rejects.toThrow(
       'Поддерживаются только номера с кодом +7 или +375',

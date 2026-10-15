@@ -25,9 +25,8 @@
   z-index: 1;
 }
 
-.chip {
-  align-self: center;
-  margin: auto;
+.chip,
+.empty {
   padding: 3px 10px;
   border-radius: var(--radius-full);
   background: var(--chat-date-bg);
@@ -37,6 +36,6 @@
   line-height: 18px;
 }
 
-.day .chip {
-  margin: 0;
+.empty {
+  margin: auto;
 }

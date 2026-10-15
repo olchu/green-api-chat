@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { createGreenApiClient } from '../../api/greenApi'
 import { apiUrl, testCredentials } from '../../test/fixtures'
 import { server, setupMockServer } from '../../test/server'
-import { loadContactInfo } from './contactInfo'
+import { ensureContactInfo, loadContactInfo } from './contactInfo'
+import { useChatStore } from '../../store/chatStore'
 
 setupMockServer()
 const client = createGreenApiClient(testCredentials)
@@ -50,5 +51,36 @@ describe('loadContactInfo', () => {
       phone: undefined,
       infoLoaded: true,
     })
+  })
+})
+
+describe('ensureContactInfo', () => {
+  const INSTANCE = testCredentials.idInstance
+
+  it('загружает данные один раз, даже при одновременных вызовах', async () => {
+    let calls = 0
+    server.use(
+      http.post(apiUrl('getContactInfo'), () => {
+        calls++
+        return HttpResponse.json({ chatId: '555', name: 'Мария', contactName: '', avatar: '' })
+      }),
+    )
+    useChatStore.getState().upsertChat(INSTANCE, { chatId: '555', name: '+7 999' })
+
+    await Promise.all([
+      ensureContactInfo(client, INSTANCE, '555'),
+      ensureContactInfo(client, INSTANCE, '555'),
+    ])
+    await ensureContactInfo(client, INSTANCE, '555')
+
+    expect(calls).toBe(1)
+    expect(useChatStore.getState().byInstance[INSTANCE].chats['555']).toMatchObject({
+      name: 'Мария',
+      infoLoaded: true,
+    })
+  })
+
+  it('ничего не делает для неизвестного чата', async () => {
+    await expect(ensureContactInfo(client, INSTANCE, 'нет')).resolves.toBeUndefined()
   })
 })

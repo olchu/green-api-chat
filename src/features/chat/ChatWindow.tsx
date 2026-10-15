@@ -1,15 +1,12 @@
 import { useInstanceId } from '../../store/authStore'
-import { useActiveChatId, useChatStore } from '../../store/chatStore'
+import { useActiveChat, useChatStore } from '../../store/chatStore'
 import { ChatHeader } from './ChatHeader'
 import { MessageList } from './MessageList'
 import styles from './ChatWindow.module.css'
 
 export function ChatWindow() {
   const instanceId = useInstanceId()
-  const chatId = useActiveChatId(instanceId)
-  const chat = useChatStore((state) =>
-    chatId ? state.byInstance[instanceId]?.chats[chatId] : undefined,
-  )
+  const chat = useActiveChat(instanceId)
 
   if (!chat) {
     return <span className={styles.hint}>Выберите чат, чтобы начать переписку</span>

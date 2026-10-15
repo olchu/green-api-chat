@@ -3,6 +3,7 @@ import { useGreenApi } from '../../api/useGreenApi'
 import { useInstanceId, useMessenger } from '../../store/authStore'
 import { useChatStore } from '../../store/chatStore'
 import { findChat } from './startChat'
+import { BackButton } from '../../components/BackButton'
 import styles from './NewChatForm.module.css'
 
 interface NewChatFormProps {
@@ -46,17 +47,7 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
   return (
     <section className={styles.panel} aria-labelledby="new-chat-title">
       <header className={styles.header}>
-        <button className={styles.back} type="button" onClick={onClose} aria-label="Назад">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="m15 5-7 7 7 7"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        <BackButton label="Назад" onClick={onClose} />
         <h1 id="new-chat-title" className={styles.title}>
           Новый чат
         </h1>

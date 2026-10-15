@@ -39,16 +39,14 @@ async function checkAccount(
   messenger: MessengerRules,
   request: CheckAccountRequest,
   notFound: string,
-  knownChats: Chat[],
   fallback: NewChat,
 ): Promise<NewChat> {
   try {
     const result = await client.checkAccount(request)
     if (!result.exist || !result.chatId) throw new StartChatError(notFound)
-    const knownName = knownChats.find((chat) => chat.chatId === result.chatId)?.name
     return {
       chatId: result.chatId,
-      name: knownName ?? fallback.name,
+      name: fallback.name,
       phone: result.phoneNumber ? String(result.phoneNumber) : fallback.phone,
       username: result.username || fallback.username,
     }
@@ -73,18 +71,11 @@ async function findByPhone(
   const notFound = messenger.supportsUsername
     ? `Номер не найден в ${messenger.name} или скрыт настройками приватности`
     : `Номер не зарегистрирован в ${messenger.name}`
-  return checkAccount(
-    client,
-    messenger,
-    { phoneNumber: validation.phoneNumber },
-    notFound,
-    knownChats,
-    {
-      chatId: '',
-      name: formatPhone(phone),
-      phone,
-    },
-  )
+  return checkAccount(client, messenger, { phoneNumber: validation.phoneNumber }, notFound, {
+    chatId: '',
+    name: formatPhone(phone),
+    phone,
+  })
 }
 
 async function findByUsername(
@@ -104,7 +95,7 @@ async function findByUsername(
   if (known) return known
 
   const notFound = `Пользователь ${username} не найден в ${messenger.name}`
-  return checkAccount(client, messenger, { username }, notFound, knownChats, {
+  return checkAccount(client, messenger, { username }, notFound, {
     chatId: '',
     name: username,
     username,

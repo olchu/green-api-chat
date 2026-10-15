@@ -53,7 +53,9 @@ interface ChatState {
   byInstance: Record<string, InstanceChats>
   /** Открытый чат вместе с инстансом: после смены инстанса он просто не совпадёт */
   active: ActiveChat | null
+  /** Создаёт чат или дополняет его; имя уже существующего чата не меняет */
   upsertChat: (instanceId: string, chat: NewChat) => void
+  /** Дополняет существующий чат, в том числе именем из профиля */
   updateChat: (instanceId: string, chatId: string, patch: Partial<Chat>) => void
   openChat: (instanceId: string, chatId: string | null) => void
   addMessage: (instanceId: string, message: Message) => void
@@ -144,11 +146,14 @@ export const useChatStore = create<ChatState>()(
       upsertChat: (instanceId, chat) =>
         set((state) =>
           updateInstance(state, instanceId, (data) => {
-            const existing = data.chats[chat.chatId]
-            const next: Chat = existing
-              ? { ...existing, ...withoutUndefined(chat) }
-              : { ...chat, unread: 0, createdAt: Date.now() }
-            return { ...data, chats: { ...data.chats, [chat.chatId]: next } }
+            if (data.chats[chat.chatId]) {
+              // Имя приходит из разных источников (номер, отправитель, профиль) —
+              // единственный, кто может его заменить, это updateChat с данными профиля
+              const { name: _name, ...rest } = chat
+              return patchChat(data, chat.chatId, () => withoutUndefined(rest))
+            }
+            const created: Chat = { ...chat, unread: 0, createdAt: Date.now() }
+            return { ...data, chats: { ...data.chats, [chat.chatId]: created } }
           }),
         ),
 
@@ -246,6 +251,15 @@ export function useChatList(instanceId: string): ChatListEntry[] {
 
 export function useMessages(instanceId: string, chatId: string): Message[] {
   return useChatStore((state) => state.byInstance[instanceId]?.messages[chatId] ?? EMPTY_MESSAGES)
+}
+
+/** Открытый чат текущего инстанса */
+export function useActiveChat(instanceId: string): Chat | undefined {
+  return useChatStore((state) =>
+    state.active?.instanceId === instanceId
+      ? state.byInstance[instanceId]?.chats[state.active.chatId]
+      : undefined,
+  )
 }
 
 /** chatId открытого чата текущего инстанса */

@@ -3,24 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAuthStore } from '../../store/authStore'
 import { useChatStore, type Message } from '../../store/chatStore'
-import { testCredentials, testSession } from '../../test/fixtures'
+import { testCredentials, testMessage, testSession } from '../../test/fixtures'
 import { ChatWindow } from './ChatWindow'
 
 const INSTANCE = testCredentials.idInstance
 const store = () => useChatStore.getState()
 const DAY = 24 * 60 * 60 * 1000
 
-function message(id: string, overrides: Partial<Message>): Message {
-  return {
-    id,
-    idMessage: id,
-    chatId: '1',
-    text: id,
-    timestamp: Date.now(),
-    direction: 'in',
-    ...overrides,
-  }
-}
+const message = (id: string, overrides: Partial<Message>) =>
+  testMessage({ id, text: id, ...overrides })
 
 beforeEach(() => {
   useAuthStore.setState({ session: testSession })
