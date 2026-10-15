@@ -25,6 +25,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: var(--bg-themed-fade);
+}
+
 button,
 input,
 textarea {

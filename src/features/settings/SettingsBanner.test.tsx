@@ -66,13 +66,12 @@ describe('SettingsBanner', () => {
     )
     render(<SettingsBanner />)
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Выключены уведомления о входящих сообщениях',
-    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('Входящие сообщения')
 
-    await userEvent.click(screen.getByRole('button', { name: 'Исправить' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Включить уведомления' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Настройки сохранены')
+    expect(screen.getByText('вкл')).toBeInTheDocument()
     expect(saved).toEqual({
       webhookUrl: '',
       incomingWebhook: 'yes',
@@ -88,8 +87,18 @@ describe('SettingsBanner', () => {
     )
     render(<SettingsBanner />)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Исправить' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Включить уведомления' }))
 
     expect(await screen.findByText(/Не удалось сохранить настройки/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Повторить' })).toBeEnabled()
+  })
+
+  it('скрывается по кнопке «Не сейчас»', async () => {
+    mockSettings({ incomingWebhook: 'no' })
+    render(<SettingsBanner />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Не сейчас' }))
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

@@ -22,9 +22,6 @@ describe('findSettingsProblems', () => {
         webhookUrl: 'https://example.com/hook',
         incomingWebhook: 'no',
       }),
-    ).toEqual([
-      'Задан webhookUrl — уведомления уходят на него, а не в приложение',
-      'Выключены уведомления о входящих сообщениях',
-    ])
+    ).toEqual(['webhookUrl', 'incomingWebhook'])
   })
 })

@@ -8,15 +8,10 @@ export const REQUIRED_SETTINGS = {
   outgoingWebhook: 'yes',
 } satisfies SetSettingsRequest
 
-const PROBLEM_TEXT: Record<keyof typeof REQUIRED_SETTINGS, string> = {
-  webhookUrl: 'Задан webhookUrl — уведомления уходят на него, а не в приложение',
-  incomingWebhook: 'Выключены уведомления о входящих сообщениях',
-  outgoingMessageWebhook: 'Выключены уведомления о сообщениях, отправленных с телефона',
-  outgoingWebhook: 'Выключены статусы доставки сообщений',
-}
+export type RequiredSetting = keyof typeof REQUIRED_SETTINGS
 
-export function findSettingsProblems(settings: InstanceSettings): string[] {
-  return (Object.keys(REQUIRED_SETTINGS) as (keyof typeof REQUIRED_SETTINGS)[])
-    .filter((key) => (settings[key] ?? '') !== REQUIRED_SETTINGS[key])
-    .map((key) => PROBLEM_TEXT[key])
+export function findSettingsProblems(settings: InstanceSettings): RequiredSetting[] {
+  return (Object.keys(REQUIRED_SETTINGS) as RequiredSetting[]).filter(
+    (key) => (settings[key] ?? '') !== REQUIRED_SETTINGS[key],
+  )
 }

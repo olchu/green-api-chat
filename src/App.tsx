@@ -10,7 +10,7 @@ function App() {
 
   // Временная заглушка до основного макета чата
   return (
-    <main>
+    <main style={{ display: 'grid', gap: 16, padding: 16, justifyItems: 'start' }}>
       <SettingsBanner />
       <p>Вы вошли: инстанс {session.credentials.idInstance}</p>
       <button type="button" onClick={logout}>
