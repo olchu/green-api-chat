@@ -33,7 +33,7 @@
   pointer-events: none;
 }
 
-/* Полная адаптивность — отдельным шагом; пока на узких экранах только список */
+/* Узкие экраны: либо список чатов, либо открытый чат на весь экран */
 @media (max-width: 767px) {
   .app {
     grid-template-columns: var(--nav-width) minmax(0, 1fr);
@@ -41,5 +41,18 @@
 
   .chatArea {
     display: none;
+  }
+
+  .app[data-chat-open='true'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app[data-chat-open='true'] > nav,
+  .app[data-chat-open='true'] .sidebar {
+    display: none;
+  }
+
+  .app[data-chat-open='true'] .chatArea {
+    display: flex;
   }
 }
