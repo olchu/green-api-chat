@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { createThrottledStorage } from './throttledStorage'
 
 export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed'
 
@@ -28,15 +29,26 @@ export interface Chat {
 
 export type NewChat = Pick<Chat, 'chatId' | 'name' | 'phone' | 'username'>
 
+export interface ChatListEntry {
+  chat: Chat
+  lastMessage?: Message
+}
+
 interface InstanceChats {
   chats: Record<string, Chat>
   messages: Record<string, Message[]>
 }
 
+interface ActiveChat {
+  instanceId: string
+  chatId: string
+}
+
 interface ChatState {
   /** Данные по idInstance, чтобы чаты разных инстансов не смешивались */
   byInstance: Record<string, InstanceChats>
-  activeChatId: string | null
+  /** Открытый чат вместе с инстансом: после смены инстанса он просто не совпадёт */
+  active: ActiveChat | null
   upsertChat: (instanceId: string, chat: NewChat) => void
   openChat: (instanceId: string, chatId: string | null) => void
   addMessage: (instanceId: string, message: Message) => void
@@ -68,31 +80,54 @@ function canChangeStatus(from: MessageStatus, to: MessageStatus): boolean {
   return STATUS_RANK[to] > STATUS_RANK[from]
 }
 
-type Updater = (data: InstanceChats) => InstanceChats
+const isActive = (active: ActiveChat | null, instanceId: string, chatId: string) =>
+  active?.instanceId === instanceId && active.chatId === chatId
 
-function updateInstance(state: ChatState, instanceId: string, update: Updater) {
-  return {
-    byInstance: {
-      ...state.byInstance,
-      [instanceId]: update(state.byInstance[instanceId] ?? EMPTY_INSTANCE),
-    },
-  }
+/** Возвращает state без изменений, если update вернул те же данные — подписчики не дёргаются */
+function updateInstance(
+  state: ChatState,
+  instanceId: string,
+  update: (data: InstanceChats) => InstanceChats,
+): Partial<ChatState> {
+  const data = state.byInstance[instanceId] ?? EMPTY_INSTANCE
+  const next = update(data)
+  return next === data ? state : { byInstance: { ...state.byInstance, [instanceId]: next } }
 }
 
-function patchChat(data: InstanceChats, chatId: string, patch: Partial<Chat>): InstanceChats {
+function patchChat(
+  data: InstanceChats,
+  chatId: string,
+  patch: (chat: Chat) => Partial<Chat>,
+): InstanceChats {
   const chat = data.chats[chatId]
-  return chat ? { ...data, chats: { ...data.chats, [chatId]: { ...chat, ...patch } } } : data
+  if (!chat) return data
+  return { ...data, chats: { ...data.chats, [chatId]: { ...chat, ...patch(chat) } } }
 }
 
-function setMessages(data: InstanceChats, chatId: string, messages: Message[]): InstanceChats {
-  return { ...data, messages: { ...data.messages, [chatId]: messages } }
+/** Меняет одно сообщение; если patch вернул null — данные остаются прежними */
+function patchMessage(
+  data: InstanceChats,
+  chatId: string,
+  matches: (message: Message) => boolean,
+  patch: (message: Message) => Partial<Message> | null,
+): InstanceChats {
+  const messages = data.messages[chatId] ?? EMPTY_MESSAGES
+  const index = messages.findIndex(matches)
+  const changes = index === -1 ? null : patch(messages[index])
+  if (!changes) return data
+
+  const next = messages.slice()
+  next[index] = { ...messages[index], ...changes }
+  return { ...data, messages: { ...data.messages, [chatId]: next } }
 }
+
+export const chatStorage = createThrottledStorage<Pick<ChatState, 'byInstance'>>()
 
 export const useChatStore = create<ChatState>()(
   persist(
     (set) => ({
       byInstance: {},
-      activeChatId: null,
+      active: null,
 
       upsertChat: (instanceId, chat) =>
         set((state) =>
@@ -106,78 +141,97 @@ export const useChatStore = create<ChatState>()(
         ),
 
       openChat: (instanceId, chatId) =>
-        set((state) => ({
-          activeChatId: chatId,
-          ...(chatId &&
-            updateInstance(state, instanceId, (data) => patchChat(data, chatId, { unread: 0 }))),
-        })),
+        set((state) =>
+          chatId
+            ? {
+                ...updateInstance(state, instanceId, (data) =>
+                  data.chats[chatId]?.unread
+                    ? patchChat(data, chatId, () => ({ unread: 0 }))
+                    : data,
+                ),
+                active: { instanceId, chatId },
+              }
+            : { active: null },
+        ),
 
       addMessage: (instanceId, message) =>
         set((state) =>
           updateInstance(state, instanceId, (data) => {
-            const messages = data.messages[message.chatId] ?? EMPTY_MESSAGES
+            const { chatId } = message
+            const messages = data.messages[chatId] ?? EMPTY_MESSAGES
             const duplicate = messages.some(
               (m) =>
                 m.id === message.id || (message.idMessage && m.idMessage === message.idMessage),
             )
             if (duplicate) return data
 
-            const withMessage = setMessages(
-              data,
-              message.chatId,
-              [...messages, message].slice(-MAX_MESSAGES_PER_CHAT),
-            )
-            const isUnread = message.direction === 'in' && state.activeChatId !== message.chatId
-            const unread = (data.chats[message.chatId]?.unread ?? 0) + 1
-            return isUnread ? patchChat(withMessage, message.chatId, { unread }) : withMessage
+            const next = {
+              ...data,
+              messages: {
+                ...data.messages,
+                [chatId]: [...messages, message].slice(-MAX_MESSAGES_PER_CHAT),
+              },
+            }
+            if (message.direction === 'out' || isActive(state.active, instanceId, chatId)) {
+              return next
+            }
+            return patchChat(next, chatId, (chat) => ({ unread: chat.unread + 1 }))
           }),
         ),
 
       updateMessage: (instanceId, chatId, id, patch) =>
         set((state) =>
-          updateInstance(state, instanceId, (data) => {
-            const messages = data.messages[chatId] ?? EMPTY_MESSAGES
-            return setMessages(
+          updateInstance(state, instanceId, (data) =>
+            patchMessage(
               data,
               chatId,
-              messages.map((m) => (m.id === id ? { ...m, ...patch } : m)),
-            )
-          }),
+              (m) => m.id === id,
+              () => patch,
+            ),
+          ),
         ),
 
       setMessageStatus: (instanceId, chatId, idMessage, status) =>
         set((state) =>
-          updateInstance(state, instanceId, (data) => {
-            const messages = data.messages[chatId] ?? EMPTY_MESSAGES
-            return setMessages(
+          updateInstance(state, instanceId, (data) =>
+            patchMessage(
               data,
               chatId,
-              messages.map((m) =>
-                m.idMessage === idMessage && canChangeStatus(m.status ?? 'pending', status)
-                  ? { ...m, status }
-                  : m,
-              ),
-            )
-          }),
+              (m) => m.idMessage === idMessage,
+              (m) => (canChangeStatus(m.status ?? 'pending', status) ? { status } : null),
+            ),
+          ),
         ),
     }),
     {
       name: 'green-api-chat/chats',
+      storage: chatStorage,
       partialize: ({ byInstance }) => ({ byInstance }),
     },
   ),
 )
 
-/** Чаты инстанса: сначала с последней активностью */
-export function useChatList(instanceId: string): Chat[] {
+/** Чаты инстанса с последним сообщением: сначала с последней активностью */
+export function useChatList(instanceId: string): ChatListEntry[] {
   const data = useChatStore((state) => state.byInstance[instanceId] ?? EMPTY_INSTANCE)
   return useMemo(() => {
-    const lastActivity = (chat: Chat) =>
-      data.messages[chat.chatId]?.at(-1)?.timestamp ?? chat.createdAt
-    return Object.values(data.chats).sort((a, b) => lastActivity(b) - lastActivity(a))
+    const entries = Object.values(data.chats).map((chat) => ({
+      chat,
+      lastMessage: data.messages[chat.chatId]?.at(-1),
+    }))
+    const lastActivity = ({ chat, lastMessage }: ChatListEntry) =>
+      lastMessage?.timestamp ?? chat.createdAt
+    return entries.sort((a, b) => lastActivity(b) - lastActivity(a))
   }, [data])
 }
 
 export function useMessages(instanceId: string, chatId: string): Message[] {
   return useChatStore((state) => state.byInstance[instanceId]?.messages[chatId] ?? EMPTY_MESSAGES)
+}
+
+/** chatId открытого чата текущего инстанса */
+export function useActiveChatId(instanceId: string): string | null {
+  return useChatStore((state) =>
+    state.active?.instanceId === instanceId ? state.active.chatId : null,
+  )
 }

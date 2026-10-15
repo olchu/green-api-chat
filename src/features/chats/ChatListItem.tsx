@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { formatChatTime } from '../../lib/time'
 import type { Chat, Message } from '../../store/chatStore'
 import { Avatar } from './Avatar'
@@ -10,7 +11,13 @@ interface ChatListItemProps {
   onSelect: (chatId: string) => void
 }
 
-export function ChatListItem({ chat, lastMessage, active, onSelect }: ChatListItemProps) {
+/** memo: при новом сообщении перерисовывается только изменившийся чат */
+export const ChatListItem = memo(function ChatListItem({
+  chat,
+  lastMessage,
+  active,
+  onSelect,
+}: ChatListItemProps) {
   return (
     <li>
       <button
@@ -48,4 +55,4 @@ export function ChatListItem({ chat, lastMessage, active, onSelect }: ChatListIt
       </button>
     </li>
   )
-}
+})

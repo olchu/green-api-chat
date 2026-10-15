@@ -1,3 +1,5 @@
+import { digitsOnly } from '../../lib/phone'
+
 const GRADIENTS = ['sky', 'violet', 'green', 'orange', 'coral'] as const
 
 /** Первые буквы двух слов имени; для номера без букв — две последние цифры */
@@ -7,7 +9,7 @@ export function getInitials(name: string): string {
     .map((word) => word.match(/\p{L}/u)?.[0])
     .filter(Boolean)
   if (letters.length) return letters.slice(0, 2).join('').toUpperCase()
-  return name.replace(/\D/g, '').slice(-2)
+  return digitsOnly(name).slice(-2)
 }
 
 /** Один и тот же чат всегда получает один и тот же градиент */

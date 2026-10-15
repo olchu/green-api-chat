@@ -1,28 +1,33 @@
-import { useMemo, useState } from 'react'
-import { useAuthStore } from '../../store/authStore'
-import { useChatList, useChatStore } from '../../store/chatStore'
+import { useCallback, useMemo, useState } from 'react'
+import { normalizePhone } from '../../lib/phone'
+import { useInstanceId } from '../../store/authStore'
+import { useActiveChatId, useChatList, useChatStore } from '../../store/chatStore'
 import { ChatListItem } from './ChatListItem'
 import styles from './ChatList.module.css'
 
 export function ChatList() {
-  const instanceId = useAuthStore((state) => state.session?.credentials.idInstance ?? '')
-  const chats = useChatList(instanceId)
-  const messages = useChatStore((state) => state.byInstance[instanceId]?.messages)
-  const activeChatId = useChatStore((state) => state.activeChatId)
+  const instanceId = useInstanceId()
+  const entries = useChatList(instanceId)
+  const activeChatId = useActiveChatId(instanceId)
   const openChat = useChatStore((state) => state.openChat)
   const [query, setQuery] = useState('')
 
-  const visibleChats = useMemo(() => {
+  const selectChat = useCallback(
+    (chatId: string) => openChat(instanceId, chatId),
+    [instanceId, openChat],
+  )
+
+  const visibleEntries = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const digits = needle.replace(/\D/g, '')
-    if (!needle) return chats
-    return chats.filter(
-      (chat) =>
+    if (!needle) return entries
+    const digits = normalizePhone(needle)
+    return entries.filter(
+      ({ chat }) =>
         chat.name.toLowerCase().includes(needle) ||
         chat.username?.toLowerCase().includes(needle) ||
         (digits && chat.phone?.includes(digits)),
     )
-  }, [chats, query])
+  }, [entries, query])
 
   return (
     <div className={styles.container}>
@@ -38,21 +43,21 @@ export function ChatList() {
         />
       </div>
 
-      {visibleChats.length > 0 ? (
+      {visibleEntries.length > 0 ? (
         <ul className={styles.list}>
-          {visibleChats.map((chat) => (
+          {visibleEntries.map(({ chat, lastMessage }) => (
             <ChatListItem
               key={chat.chatId}
               chat={chat}
-              lastMessage={messages?.[chat.chatId]?.at(-1)}
+              lastMessage={lastMessage}
               active={chat.chatId === activeChatId}
-              onSelect={(chatId) => openChat(instanceId, chatId)}
+              onSelect={selectChat}
             />
           ))}
         </ul>
       ) : (
         <p className={styles.empty}>
-          {chats.length ? 'Ничего не найдено' : 'Чатов пока нет. Начните переписку по номеру'}
+          {entries.length ? 'Ничего не найдено' : 'Чатов пока нет. Начните переписку по номеру'}
         </p>
       )}
     </div>

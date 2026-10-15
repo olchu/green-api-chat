@@ -6,30 +6,24 @@
 }
 
 .search {
+  composes: field from '../../styles/inputs.module.css';
   display: flex;
   gap: 8px;
   align-items: center;
   height: 40px;
   margin: 0 20px 8px;
   padding: 0 12px;
-  border-radius: var(--radius-md);
-  background: var(--bg-input);
-  color: var(--icon-secondary);
 }
 
-.search:focus-within {
-  box-shadow: 0 0 0 2px var(--color-accent);
+.search svg {
+  flex: none;
+  color: var(--icon-secondary);
 }
 
 .searchInput {
   flex: 1;
   min-width: 0;
   height: 100%;
-  color: var(--text-primary);
-}
-
-.searchInput::placeholder {
-  color: var(--text-tertiary);
 }
 
 .searchInput::-webkit-search-cancel-button {

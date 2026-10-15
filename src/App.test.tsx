@@ -9,8 +9,6 @@ import { server, setupMockServer } from './test/server'
 
 setupMockServer()
 beforeEach(() => {
-  localStorage.clear()
-  useAuthStore.setState({ session: null })
   server.use(http.get(apiUrl('getSettings'), () => HttpResponse.json({})))
 })
 

@@ -1,17 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { server, setupMockServer } from '../../test/server'
 import { apiUrl } from '../../test/fixtures'
 import { useAuthStore } from '../../store/authStore'
 import { LoginPage } from './LoginPage'
 
 setupMockServer()
-beforeEach(() => {
-  localStorage.clear()
-  useAuthStore.setState({ session: null })
-})
 
 async function fillForm() {
   const user = userEvent.setup()

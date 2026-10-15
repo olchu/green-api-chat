@@ -1,14 +1,16 @@
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  chatStorage,
   MAX_MESSAGES_PER_CHAT,
   useChatList,
   useChatStore,
   useMessages,
   type Message,
 } from './chatStore'
+import { testCredentials } from '../test/fixtures'
 
-const INSTANCE = '4100000001'
+const INSTANCE = testCredentials.idInstance
 const store = () => useChatStore.getState()
 const chat = (instanceId = INSTANCE) => store().byInstance[instanceId]?.chats['100']
 const messages = (instanceId = INSTANCE) => store().byInstance[instanceId]?.messages['100'] ?? []
@@ -26,8 +28,6 @@ function message(overrides: Partial<Message> = {}): Message {
 }
 
 beforeEach(() => {
-  localStorage.clear()
-  useChatStore.setState({ byInstance: {}, activeChatId: null })
   store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', phone: '79991234567' })
 })
 
@@ -63,7 +63,7 @@ describe('chatStore', () => {
     store().openChat(INSTANCE, '100')
 
     expect(chat()?.unread).toBe(0)
-    expect(store().activeChatId).toBe('100')
+    expect(store().active).toEqual({ instanceId: INSTANCE, chatId: '100' })
   })
 
   it('updateMessage меняет сообщение по локальному id', () => {
@@ -113,10 +113,11 @@ describe('chatStore', () => {
 
   it('сохраняет чаты в localStorage без открытого чата', () => {
     store().openChat(INSTANCE, '100')
+    chatStorage.flush()
 
     const saved = JSON.parse(localStorage.getItem(useChatStore.persist.getOptions().name!)!)
     expect(saved.state.byInstance[INSTANCE].chats['100'].name).toBe('Анна')
-    expect(saved.state.activeChatId).toBeUndefined()
+    expect(saved.state.active).toBeUndefined()
   })
 })
 
@@ -127,7 +128,7 @@ describe('useChatList', () => {
 
     const { result } = renderHook(() => useChatList(INSTANCE))
 
-    expect(result.current.map((c) => c.chatId)).toEqual(['100', '200'])
+    expect(result.current.map((entry) => entry.chat.chatId)).toEqual(['100', '200'])
   })
 
   it('возвращает тот же массив, пока данные не менялись', () => {
@@ -149,5 +150,29 @@ describe('useMessages', () => {
 
     expect(result.current).toBe(first)
     expect(first).toEqual([])
+  })
+})
+
+describe('изменения без эффекта', () => {
+  it('не меняют состояние', () => {
+    store().addMessage(INSTANCE, message({ direction: 'out', status: 'read' }))
+    const before = store()
+
+    store().setMessageStatus(INSTANCE, '100', 'm1', 'delivered')
+    store().addMessage(INSTANCE, message({ direction: 'out', status: 'read' }))
+    store().updateMessage(INSTANCE, '100', 'нет', { text: 'x' })
+
+    expect(store()).toBe(before)
+  })
+})
+
+describe('открытый чат', () => {
+  it('привязан к инстансу', () => {
+    store().openChat(INSTANCE, '100')
+    store().upsertChat('другой', { chatId: '100', name: 'Тёзка' })
+
+    store().addMessage('другой', message())
+
+    expect(store().byInstance['другой'].chats['100'].unread).toBe(1)
   })
 })

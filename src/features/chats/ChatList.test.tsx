@@ -10,9 +10,7 @@ const INSTANCE = testCredentials.idInstance
 const store = () => useChatStore.getState()
 
 beforeEach(() => {
-  localStorage.clear()
   useAuthStore.setState({ session: testSession })
-  useChatStore.setState({ byInstance: {}, activeChatId: null })
 })
 
 function seed() {
@@ -59,7 +57,7 @@ describe('ChatList', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Анна/ }))
 
-    expect(store().activeChatId).toBe('1')
+    expect(store().active).toEqual({ instanceId: INSTANCE, chatId: '1' })
     expect(screen.getByRole('button', { name: /Анна/ })).toHaveAttribute('aria-current', 'true')
     expect(screen.queryByLabelText(/Непрочитанных/)).not.toBeInTheDocument()
   })

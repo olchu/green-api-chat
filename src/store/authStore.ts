@@ -30,5 +30,9 @@ export const useAuthStore = create<AuthState>()(
 
 export const useSession = () => useAuthStore((state) => state.session)
 
+/** idInstance текущей сессии; пустая строка, если пользователь не вошёл */
+export const useInstanceId = () =>
+  useAuthStore((state) => state.session?.credentials.idInstance ?? '')
+
 export const useMessenger = () =>
   detectMessenger(useAuthStore((state) => state.session?.typeInstance))

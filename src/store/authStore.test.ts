@@ -1,14 +1,9 @@
 import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { testSession as session } from '../test/fixtures'
 import { useAuthStore, useMessenger } from './authStore'
 
 const STORAGE_KEY = useAuthStore.persist.getOptions().name!
-
-beforeEach(() => {
-  localStorage.clear()
-  useAuthStore.setState({ session: null })
-})
 
 describe('authStore', () => {
   it('login сохраняет сессию в store и localStorage', () => {

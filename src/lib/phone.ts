@@ -2,11 +2,13 @@ import type { MessengerRules } from './messengers'
 
 export type PhoneValidation = { ok: true; phoneNumber: number } | { ok: false; error: string }
 
+export const digitsOnly = (value: string | number) => String(value).replace(/\D/g, '')
+
 /** Только цифры; «8 999…» без плюса считается российским номером и превращается в «7999…» */
 export function normalizePhone(input: string): string {
-  const digits = input.replace(/\D/g, '')
-  const isRussianTrunk = !input.trim().startsWith('+') && digits.length === 11
-  return isRussianTrunk && digits.startsWith('8') ? `7${digits.slice(1)}` : digits
+  const digits = digitsOnly(input)
+  const isRussianTrunk = !input.trim().startsWith('+') && /^8\d{10}$/.test(digits)
+  return isRussianTrunk ? `7${digits.slice(1)}` : digits
 }
 
 export function validatePhone(input: string, rules: MessengerRules['phone']): PhoneValidation {
@@ -32,7 +34,7 @@ export function validatePhone(input: string, rules: MessengerRules['phone']): Ph
 
 /** +7 999 123-45-67 для российских номеров, иначе +цифры */
 export function formatPhone(phone: string | number): string {
-  const digits = String(phone).replace(/\D/g, '')
+  const digits = digitsOnly(phone)
   const ru = /^7(\d{3})(\d{3})(\d{2})(\d{2})$/.exec(digits)
   return ru ? `+7 ${ru[1]} ${ru[2]}-${ru[3]}-${ru[4]}` : `+${digits}`
 }
