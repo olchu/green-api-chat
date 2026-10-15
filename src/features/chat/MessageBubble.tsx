@@ -42,7 +42,15 @@ const STATUS_ICONS: Record<MessageStatus, ReactNode> = {
   ),
 }
 
-export const MessageBubble = memo(function MessageBubble({ message }: { message: Message }) {
+interface MessageBubbleProps {
+  message: Message
+  onRetry: (message: Message) => void
+}
+
+export const MessageBubble = memo(function MessageBubble({ message, onRetry }: MessageBubbleProps) {
+  // Повторить можно только то, что не дошло до GREEN-API: у такого нет idMessage
+  const canRetry = message.status === 'failed' && !message.idMessage
+
   return (
     <li className={styles.row} data-direction={message.direction}>
       <div className={styles.bubble} data-status={message.status}>
@@ -65,6 +73,11 @@ export const MessageBubble = memo(function MessageBubble({ message }: { message:
             </svg>
           )}
         </span>
+        {canRetry && (
+          <button className={styles.retry} type="button" onClick={() => onRetry(message)}>
+            Не отправлено. Повторить
+          </button>
+        )}
       </div>
     </li>
   )

@@ -54,3 +54,22 @@
 .bubble[data-status='read'] .status {
   color: var(--bubble-out-status);
 }
+
+.retry {
+  display: block;
+  clear: both;
+  padding-top: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-negative);
+}
+
+.retry:hover {
+  text-decoration: underline;
+}
+
+.retry:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

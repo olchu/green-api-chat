@@ -1,9 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw/http'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useAuthStore } from '../../store/authStore'
 import { useChatStore, type Message } from '../../store/chatStore'
-import { testCredentials, testMessage, testSession } from '../../test/fixtures'
+import { apiUrl, testCredentials, testMessage, testSession } from '../../test/fixtures'
+import { server, setupMockServer } from '../../test/server'
 import { ChatWindow } from './ChatWindow'
 
 const INSTANCE = testCredentials.idInstance
@@ -12,6 +14,8 @@ const DAY = 24 * 60 * 60 * 1000
 
 const message = (id: string, overrides: Partial<Message>) =>
   testMessage({ id, text: id, ...overrides })
+
+setupMockServer()
 
 beforeEach(() => {
   useAuthStore.setState({ session: testSession })
@@ -66,5 +70,33 @@ describe('ChatWindow', () => {
 
     expect(store().active).toBeNull()
     expect(screen.getByText('Выберите чат, чтобы начать переписку')).toBeInTheDocument()
+  })
+})
+
+describe('ChatWindow: отправка', () => {
+  beforeEach(() => store().openChat(INSTANCE, '1'))
+
+  it('отправляет сообщение и показывает статус', async () => {
+    server.use(http.post(apiUrl('sendMessage'), () => HttpResponse.json({ idMessage: 'srv-1' })))
+    render(<ChatWindow />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Сообщение' }), 'Привет!{Enter}')
+
+    expect(screen.getByText('Привет!')).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'Отправлено' })).toBeInTheDocument()
+  })
+
+  it('при ошибке предлагает повторить', async () => {
+    server.use(http.post(apiUrl('sendMessage'), () => new HttpResponse(null, { status: 500 })))
+    render(<ChatWindow />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Сообщение' }), 'Привет!{Enter}')
+    const retry = await screen.findByRole('button', { name: 'Не отправлено. Повторить' })
+
+    server.use(http.post(apiUrl('sendMessage'), () => HttpResponse.json({ idMessage: 'srv-2' })))
+    await userEvent.click(retry)
+
+    expect(await screen.findByRole('img', { name: 'Отправлено' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Повторить/ })).not.toBeInTheDocument()
   })
 })
