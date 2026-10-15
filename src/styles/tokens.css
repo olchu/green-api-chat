@@ -59,6 +59,7 @@
   --radius-full: 9999px;
 
   --nav-width: 72px;
-  --chat-list-width: 380px;
+  /* На ноутбуках и планшетах список уже, чтобы чату оставалось место */
+  --chat-list-width: clamp(280px, 30vw, 380px);
   --app-max-width: 1280px;
 }

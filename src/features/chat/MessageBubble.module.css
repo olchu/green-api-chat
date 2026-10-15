@@ -73,3 +73,9 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+@media (max-width: 767px) {
+  .bubble {
+    max-width: 85%;
+  }
+}

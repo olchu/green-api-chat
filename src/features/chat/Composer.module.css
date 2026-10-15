@@ -60,3 +60,19 @@
 .send:active:not(:disabled) {
   transform: scale(0.94);
 }
+
+/* Учитываем полоску жестов iPhone, когда клавиатура скрыта */
+.composer {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 767px) {
+  .composer {
+    padding: 0 8px max(8px, env(safe-area-inset-bottom));
+  }
+
+  /* 16px и больше — иначе iOS приближает страницу при фокусе */
+  .input {
+    font-size: 16px;
+  }
+}

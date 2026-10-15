@@ -66,9 +66,7 @@ export function NewChatForm({ onClose }: NewChatFormProps) {
             autoComplete={messenger.supportsUsername ? 'off' : 'tel'}
             autoCapitalize="off"
             spellCheck={false}
-            placeholder={
-              messenger.supportsUsername ? '+7 999 123-45-67 или @username' : '+7 999 123-45-67'
-            }
+            placeholder="+7 999 123-45-67"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-invalid={Boolean(error)}

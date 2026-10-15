@@ -36,3 +36,14 @@
   width: 40px;
   padding: 0;
 }
+
+@media (max-width: 767px) {
+  .header {
+    padding: 16px 16px 10px;
+  }
+
+  .title {
+    font-size: 24px;
+    line-height: 30px;
+  }
+}

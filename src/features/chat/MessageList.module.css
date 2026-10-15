@@ -87,3 +87,13 @@
     animation: none;
   }
 }
+
+@media (max-width: 767px) {
+  .scroll {
+    padding: 8px 8px 12px;
+  }
+
+  .jump {
+    right: 12px;
+  }
+}

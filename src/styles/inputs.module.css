@@ -16,3 +16,13 @@
     color: var(--text-tertiary);
   }
 }
+
+@layer shared {
+  /* 16px и больше — иначе iOS приближает страницу при фокусе */
+  @media (max-width: 767px) {
+    .field,
+    .field input {
+      font-size: 16px;
+    }
+  }
+}

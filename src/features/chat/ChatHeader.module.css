@@ -30,3 +30,11 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+@media (max-width: 767px) {
+  .header {
+    min-height: 56px;
+    padding: 6px 12px 6px 4px;
+    gap: 8px;
+  }
+}

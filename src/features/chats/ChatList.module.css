@@ -44,3 +44,13 @@
   text-align: center;
   text-wrap: balance;
 }
+
+@media (max-width: 767px) {
+  .search {
+    margin: 0 16px 8px;
+  }
+
+  .list {
+    padding: 0 4px 8px;
+  }
+}
