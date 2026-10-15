@@ -62,7 +62,10 @@ describe('formatPhone', () => {
     expect(formatPhone(79991234567)).toBe('+7 999 123-45-67')
   })
 
-  it('остальные номера показывает с плюсом', () => {
-    expect(formatPhone('375291234567')).toBe('+375291234567')
+  it('остальные номера делит на код страны и группы', () => {
+    expect(formatPhone('375291234567')).toBe('+375 291 234 567')
+    expect(formatPhone('381601234567')).toBe('+381 601 234 567')
+    expect(formatPhone('4915123456789')).toBe('+49 151 234 567 89')
+    expect(formatPhone('12025550123')).toBe('+1 202 555 0123')
   })
 })

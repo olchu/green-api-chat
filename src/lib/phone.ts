@@ -32,9 +32,30 @@ export function validatePhone(input: string, rules: MessengerRules['phone']): Ph
   return { ok: true, phoneNumber: Number(digits) }
 }
 
-/** +7 999 123-45-67 для российских номеров, иначе +цифры */
+// Коды стран ITU не являются префиксами друг друга: 1 и 7 — однозначные,
+// эти — двузначные, остальные — трёхзначные
+const TWO_DIGIT_CODES = new Set(
+  '20 27 30 31 32 33 34 36 39 40 41 43 44 45 46 47 48 49 51 52 53 54 55 56 57 58 60 61 62 63 64 65 66 81 82 84 86 90 91 92 93 94 95 98'.split(
+    ' ',
+  ),
+)
+
+function countryCodeLength(digits: string): number {
+  if (digits.startsWith('1') || digits.startsWith('7')) return 1
+  return TWO_DIGIT_CODES.has(digits.slice(0, 2)) ? 2 : 3
+}
+
+/** +7 999 123-45-67 для российских номеров, иначе код страны и группы по три цифры */
 export function formatPhone(phone: string | number): string {
   const digits = digitsOnly(phone)
   const ru = /^7(\d{3})(\d{3})(\d{2})(\d{2})$/.exec(digits)
-  return ru ? `+7 ${ru[1]} ${ru[2]}-${ru[3]}-${ru[4]}` : `+${digits}`
+  if (ru) return `+7 ${ru[1]} ${ru[2]}-${ru[3]}-${ru[4]}`
+
+  const codeLength = countryCodeLength(digits)
+  const groups: string[] = digits.slice(codeLength).match(/\d{1,3}/g) ?? []
+  // Одну цифру в конце присоединяем к предыдущей группе: 123 4567, а не 123 456 7
+  if (groups.length > 1 && groups.at(-1)!.length === 1) {
+    groups.push(groups.splice(-2).join(''))
+  }
+  return `+${[digits.slice(0, codeLength), ...groups].join(' ')}`
 }

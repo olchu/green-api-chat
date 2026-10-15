@@ -16,12 +16,11 @@ export function ChatWindow() {
   }
 
   return (
-    <section className={styles.window} aria-label={`Чат с ${chat.name}`}>
+    // key: при смене чата лента и черновик создаются заново, без переноса из прошлого чата
+    <section key={chat.chatId} className={styles.window} aria-label={`Чат с ${chat.name}`}>
       <ChatHeader chat={chat} onClose={() => useChatStore.getState().openChat(instanceId, null)} />
       <MessageList instanceId={instanceId} chatId={chat.chatId} />
-      {/* key: черновик не переносится в другой чат */}
       <Composer
-        key={chat.chatId}
         maxLength={messenger.maxMessageLength}
         onSend={(text) => void sendChatMessage(chat.chatId, text)}
       />

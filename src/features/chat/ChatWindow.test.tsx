@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw/http'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -98,5 +98,22 @@ describe('ChatWindow: отправка', () => {
 
     expect(await screen.findByRole('img', { name: 'Отправлено' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Повторить/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('ChatWindow: переключение чатов', () => {
+  it('показывает только сообщения нового чата', () => {
+    store().upsertChat(INSTANCE, { chatId: '2', name: 'Борис' })
+    store().addMessage(INSTANCE, message('Сообщение Анны', { chatId: '1' }))
+    store().addMessage(INSTANCE, message('Сообщение Бориса', { chatId: '2' }))
+    store().openChat(INSTANCE, '1')
+    const { rerender } = render(<ChatWindow />)
+
+    act(() => store().openChat(INSTANCE, '2'))
+    rerender(<ChatWindow />)
+
+    expect(screen.getAllByRole('list', { name: 'Сообщения' })).toHaveLength(1)
+    expect(screen.getByText('Сообщение Бориса')).toBeInTheDocument()
+    expect(screen.queryByText('Сообщение Анны')).not.toBeInTheDocument()
   })
 })
