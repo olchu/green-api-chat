@@ -2,11 +2,11 @@
 import { http, HttpResponse } from 'msw/http'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
-import { buildUrl, createGreenApiClient, GreenApiError } from './greenApi'
+import { buildUrl, createGreenApiClient, GreenApiError, normalizeCredentials } from './greenApi'
 import type { Credentials } from './types'
 
 const credentials: Credentials = {
-  apiUrl: 'https://4100.api.green-api.com/',
+  apiUrl: 'https://4100.api.green-api.com',
   idInstance: '4100000001',
   apiTokenInstance: 'token123',
 }
@@ -19,13 +19,23 @@ beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
-describe('buildUrl', () => {
-  it('убирает лишний слэш и пробелы, добавляет суффикс и параметры', () => {
+describe('normalizeCredentials', () => {
+  it('убирает пробелы и слэш в конце apiUrl', () => {
     expect(
-      buildUrl({ ...credentials, idInstance: ' 4100000001 ' }, 'receiveNotification', {
-        query: { receiveTimeout: 20 },
+      normalizeCredentials({
+        apiUrl: ' https://4100.api.green-api.com// ',
+        idInstance: ' 4100000001 ',
+        apiTokenInstance: ' token123\n',
       }),
-    ).toBe(`${base}/receiveNotification/token123?receiveTimeout=20`)
+    ).toEqual(credentials)
+  })
+})
+
+describe('buildUrl', () => {
+  it('добавляет суффикс и параметры', () => {
+    expect(buildUrl(credentials, 'receiveNotification', { query: { receiveTimeout: '20' } })).toBe(
+      `${base}/receiveNotification/token123?receiveTimeout=20`,
+    )
 
     expect(buildUrl(credentials, 'deleteNotification', { pathSuffix: '42' })).toBe(
       `${base}/deleteNotification/token123/42`,

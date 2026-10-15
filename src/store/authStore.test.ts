@@ -12,7 +12,7 @@ const session: Session = {
   account: { phone: '79991234567', chatId: '10000000', avatar: '' },
 }
 
-const STORAGE_KEY = 'green-api-chat/auth'
+const STORAGE_KEY = useAuthStore.persist.getOptions().name!
 
 beforeEach(() => {
   localStorage.clear()
@@ -36,7 +36,7 @@ describe('authStore', () => {
   })
 
   it('восстанавливает сессию из localStorage', async () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { session }, version: 1 }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ state: { session }, version: 0 }))
 
     await useAuthStore.persist.rehydrate()
 

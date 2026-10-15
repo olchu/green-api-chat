@@ -1,13 +1,9 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-import type { Credentials, TypeInstance } from '../api/types'
+import { persist } from 'zustand/middleware'
+import type { AccountSettings, Credentials, TypeInstance } from '../api/types'
 import { detectMessenger } from '../lib/messengers'
 
-export interface Account {
-  phone: string
-  chatId: string
-  avatar: string
-}
+export type Account = Pick<AccountSettings, 'phone' | 'chatId' | 'avatar'>
 
 export interface Session {
   credentials: Credentials
@@ -28,12 +24,7 @@ export const useAuthStore = create<AuthState>()(
       login: (session) => set({ session }),
       logout: () => set({ session: null }),
     }),
-    {
-      name: 'green-api-chat/auth',
-      version: 1,
-      storage: createJSONStorage(() => localStorage),
-      partialize: ({ session }) => ({ session }),
-    },
+    { name: 'green-api-chat/auth' },
   ),
 )
 

@@ -28,8 +28,21 @@ interface RequestOptions {
   httpMethod?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   pathSuffix?: string
-  query?: Record<string, string | number>
+  query?: Record<string, string>
   signal?: AbortSignal
+}
+
+/** Убирает пробелы, скопированные вместе со значениями, и слэш в конце apiUrl */
+export function normalizeCredentials({
+  apiUrl,
+  idInstance,
+  apiTokenInstance,
+}: Credentials): Credentials {
+  return {
+    apiUrl: apiUrl.trim().replace(/\/+$/, ''),
+    idInstance: idInstance.trim(),
+    apiTokenInstance: apiTokenInstance.trim(),
+  }
 }
 
 export function buildUrl(
@@ -37,15 +50,9 @@ export function buildUrl(
   method: string,
   { pathSuffix, query }: Pick<RequestOptions, 'pathSuffix' | 'query'> = {},
 ): string {
-  const base = apiUrl.trim().replace(/\/+$/, '')
-  let url = `${base}/waInstance${idInstance.trim()}/${method}/${apiTokenInstance.trim()}`
+  let url = `${apiUrl}/waInstance${idInstance}/${method}/${apiTokenInstance}`
   if (pathSuffix) url += `/${pathSuffix}`
-  if (query) {
-    const params = new URLSearchParams(
-      Object.entries(query).map(([key, value]) => [key, String(value)]),
-    )
-    url += `?${params}`
-  }
+  if (query) url += `?${new URLSearchParams(query)}`
   return url
 }
 
@@ -73,13 +80,14 @@ function extractErrorMessage(body: unknown, fallback: string): string {
 export function createGreenApiClient(credentials: Credentials) {
   async function request<T>(method: string, options: RequestOptions = {}): Promise<T> {
     const { httpMethod = 'GET', body, signal } = options
+    const hasBody = body !== undefined
 
     let response: Response
     try {
       response = await fetch(buildUrl(credentials, method, options), {
         method: httpMethod,
-        headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        headers: hasBody ? { 'Content-Type': 'application/json' } : undefined,
+        body: hasBody ? JSON.stringify(body) : undefined,
         signal,
       })
     } catch (error) {
@@ -122,7 +130,7 @@ export function createGreenApiClient(credentials: Credentials) {
 
     receiveNotification: (receiveTimeout: number, signal?: AbortSignal) =>
       request<ReceiveNotificationResponse>('receiveNotification', {
-        query: { receiveTimeout },
+        query: { receiveTimeout: String(receiveTimeout) },
         signal,
       }),
 

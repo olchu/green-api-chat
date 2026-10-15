@@ -126,26 +126,18 @@ export interface OtherMessageData {
 
 export type MessageData = TextMessageData | ExtendedTextMessageData | OtherMessageData
 
-interface MessageNotificationBase {
+export interface MessageNotification {
+  /**
+   * incomingMessageReceived — входящее,
+   * outgoingMessageReceived — отправлено с телефона или другого клиента,
+   * outgoingAPIMessageReceived — отправлено через API
+   */
+  typeWebhook: 'incomingMessageReceived' | 'outgoingMessageReceived' | 'outgoingAPIMessageReceived'
   instanceData: InstanceData
   timestamp: number
   idMessage: string
   senderData: SenderData
   messageData: MessageData
-}
-
-export interface IncomingMessageNotification extends MessageNotificationBase {
-  typeWebhook: 'incomingMessageReceived'
-}
-
-/** Сообщение, отправленное с телефона или другого клиента */
-export interface OutgoingMessageNotification extends MessageNotificationBase {
-  typeWebhook: 'outgoingMessageReceived'
-}
-
-/** Сообщение, отправленное через API */
-export interface OutgoingApiMessageNotification extends MessageNotificationBase {
-  typeWebhook: 'outgoingAPIMessageReceived'
 }
 
 export type OutgoingMessageStatus = 'sent' | 'delivered' | 'read' | 'failed' | 'noAccount'
@@ -182,9 +174,7 @@ export interface QuotaExceededNotification {
 }
 
 export type NotificationBody =
-  | IncomingMessageNotification
-  | OutgoingMessageNotification
-  | OutgoingApiMessageNotification
+  | MessageNotification
   | OutgoingMessageStatusNotification
   | StateInstanceChangedNotification
   | QuotaExceededNotification
