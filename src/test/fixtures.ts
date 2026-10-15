@@ -1,4 +1,4 @@
-import type { Credentials } from '../api/types'
+import type { Credentials, InstanceData, MessageNotification } from '../api/types'
 import type { Session } from '../store/authStore'
 import type { Message } from '../store/chatStore'
 
@@ -30,6 +30,35 @@ export function testMessage(overrides: Partial<Message> = {}): Message {
     text: 'Привет',
     timestamp: Date.now(),
     direction: 'in',
+    ...overrides,
+  }
+}
+
+export const testInstanceData: InstanceData = {
+  idInstance: 4100000001,
+  wid: '79876543210@c.us',
+  typeInstance: 'telegram',
+}
+
+/** Входящее текстовое уведомление по примеру из документации GREEN-API для Telegram */
+export function testMessageNotification(
+  overrides: Partial<MessageNotification> = {},
+): MessageNotification {
+  return {
+    typeWebhook: 'incomingMessageReceived',
+    instanceData: testInstanceData,
+    timestamp: 1763115112,
+    idMessage: '126543123451133331119',
+    senderData: {
+      chatId: '10000000',
+      chatName: 'Василиса',
+      chatType: 'user',
+      sender: '10000000',
+      senderName: 'Василиса',
+      senderContactName: 'Василиса Премудрая',
+      senderPhoneNumber: 79876543210,
+    },
+    messageData: { typeMessage: 'textMessage', textMessageData: { textMessage: 'Привет!' } },
     ...overrides,
   }
 }

@@ -32,7 +32,8 @@ const STATUS_ICONS: Record<MessageStatus, ReactNode> = {
     </>
   ),
   sent: checks(SINGLE_CHECK),
-  delivered: checks(DOUBLE_CHECK),
+  // В Telegram и MAX нет отдельной отметки «доставлено»: две галочки — только «прочитано»
+  delivered: checks(SINGLE_CHECK),
   read: checks(DOUBLE_CHECK),
   failed: (
     <>

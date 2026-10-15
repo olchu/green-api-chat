@@ -152,6 +152,7 @@ describe('изменения без эффекта', () => {
     store().setMessageStatus(INSTANCE, '100', 'm1', 'delivered')
     store().addMessage(INSTANCE, message({ direction: 'out', status: 'read' }))
     store().updateMessage(INSTANCE, '100', 'нет', { text: 'x' })
+    store().upsertChat(INSTANCE, { chatId: '100', name: 'Анна', phone: '79991234567' })
 
     expect(store()).toBe(before)
   })
@@ -230,5 +231,58 @@ describe('отправленные сообщения', () => {
     store().resolveMessage(INSTANCE, '100', 'local-1', { status: 'sent', idMessage: 'srv-1' })
 
     expect(messages()[0].status).toBe('delivered')
+  })
+})
+
+describe('статусы по всему чату', () => {
+  function seedOutgoing() {
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'a', text: 'a', idMessage: 'a', direction: 'out', status: 'sent' }),
+    )
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'b', text: 'b', idMessage: 'b', direction: 'out', status: 'delivered' }),
+    )
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'p', text: 'p', idMessage: undefined, direction: 'out', status: 'pending' }),
+    )
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'f', text: 'f', idMessage: 'f', direction: 'out', status: 'failed' }),
+    )
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'c', text: 'c', idMessage: 'c', direction: 'out', status: 'sent' }),
+    )
+    store().addMessage(
+      INSTANCE,
+      message({ id: 'd', text: 'd', idMessage: 'd', direction: 'out', status: 'sent' }),
+    )
+  }
+  const statuses = () => Object.fromEntries(messages().map((m) => [m.id, m.status]))
+
+  it('«прочитано» последнего сообщения отмечает и все более ранние отправленные', () => {
+    seedOutgoing()
+
+    store().setMessageStatus(INSTANCE, '100', 'c', 'read')
+
+    expect(statuses()).toEqual({
+      a: 'read',
+      b: 'read',
+      p: 'pending',
+      f: 'failed',
+      c: 'read',
+      d: 'sent',
+    })
+  })
+
+  it('ошибка доставки относится только к одному сообщению', () => {
+    seedOutgoing()
+
+    store().setMessageStatus(INSTANCE, '100', 'c', 'failed')
+
+    expect(statuses()).toMatchObject({ a: 'sent', b: 'delivered', c: 'failed', d: 'sent' })
   })
 })

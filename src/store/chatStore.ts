@@ -94,6 +94,14 @@ function canChangeStatus(from: MessageStatus, to: MessageStatus): boolean {
   return STATUS_RANK[to] > STATUS_RANK[from]
 }
 
+/** Новый статус, если его можно поставить поверх текущего, иначе текущий */
+function raiseStatus(
+  current: MessageStatus | undefined,
+  next: MessageStatus,
+): MessageStatus | undefined {
+  return canChangeStatus(current ?? 'pending', next) ? next : current
+}
+
 const isActive = (active: ActiveChat | null, instanceId: string, chatId: string) =>
   active?.instanceId === instanceId && active.chatId === chatId
 
@@ -122,7 +130,13 @@ function patchChat(
 ): InstanceChats {
   const chat = data.chats[chatId]
   if (!chat) return data
-  return { ...data, chats: { ...data.chats, [chatId]: { ...chat, ...patch(chat) } } }
+  const changes = patch(chat)
+  const unchanged = Object.entries(changes).every(
+    ([key, value]) => chat[key as keyof Chat] === value,
+  )
+  // Без изменений — прежние данные: нет перерисовок и записи в хранилище
+  if (unchanged) return data
+  return { ...data, chats: { ...data.chats, [chatId]: { ...chat, ...changes } } }
 }
 
 /** Меняет одно сообщение; если patch вернул null — данные остаются прежними */
@@ -140,6 +154,37 @@ function patchMessage(
   const next = messages.slice()
   next[index] = { ...messages[index], ...changes }
   return { ...data, messages: { ...data.messages, [chatId]: next } }
+}
+
+/**
+ * «Доставлено» и «прочитано» в Telegram и MAX относятся ко всему чату до этого сообщения,
+ * и GREEN-API присылает статус только для последнего — поднимаем статус и у более ранних
+ * отправленных. Ошибка доставки относится только к одному сообщению.
+ */
+function applyStatus(
+  data: InstanceChats,
+  chatId: string,
+  idMessage: string,
+  status: MessageStatus,
+): InstanceChats {
+  const messages = data.messages[chatId] ?? EMPTY_MESSAGES
+  const index = messages.findIndex((m) => m.idMessage === idMessage)
+  if (index === -1) return data
+
+  let next: Message[] | undefined
+  const first = status === 'failed' ? index : 0
+  for (let i = index; i >= first; i--) {
+    const message = messages[i]
+    const earlierSent =
+      message.direction === 'out' && (message.status === 'sent' || message.status === 'delivered')
+    if (i !== index && !earlierSent) continue
+
+    const raised = raiseStatus(message.status, status)
+    if (raised === message.status) continue
+    next ??= messages.slice()
+    next[i] = { ...message, status: raised }
+  }
+  return next ? { ...data, messages: { ...data.messages, [chatId]: next } } : data
 }
 
 export const chatStorage = createThrottledStorage<Pick<ChatState, 'byInstance'>>()
@@ -209,9 +254,7 @@ export const useChatStore = create<ChatState>()(
                   (m.status === 'pending' || m.status === 'failed'),
                 (m) => ({
                   idMessage: message.idMessage,
-                  status: canChangeStatus(m.status ?? 'pending', message.status ?? 'sent')
-                    ? (message.status ?? 'sent')
-                    : m.status,
+                  status: raiseStatus(m.status, message.status ?? 'sent'),
                 }),
               )
               if (echoed !== data) return echoed
@@ -252,7 +295,7 @@ export const useChatStore = create<ChatState>()(
               (m) => m.id === id,
               (m) => ({
                 idMessage: m.idMessage ?? idMessage,
-                status: canChangeStatus(m.status ?? 'pending', status) ? status : m.status,
+                status: raiseStatus(m.status, status),
               }),
             ),
           ),
@@ -260,14 +303,7 @@ export const useChatStore = create<ChatState>()(
 
       setMessageStatus: (instanceId, chatId, idMessage, status) =>
         set((state) =>
-          updateInstance(state, instanceId, (data) =>
-            patchMessage(
-              data,
-              chatId,
-              (m) => m.idMessage === idMessage,
-              (m) => (canChangeStatus(m.status ?? 'pending', status) ? { status } : null),
-            ),
-          ),
+          updateInstance(state, instanceId, (data) => applyStatus(data, chatId, idMessage, status)),
         ),
     }),
     {

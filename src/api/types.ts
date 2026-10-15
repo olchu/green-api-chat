@@ -119,8 +119,9 @@ export interface TextMessageData {
   }
 }
 
+/** Текст со ссылкой или ответ с цитатой */
 export interface ExtendedTextMessageData {
-  typeMessage: 'extendedTextMessage'
+  typeMessage: 'extendedTextMessage' | 'quotedMessage'
   extendedTextMessageData: {
     text: string
     description?: string
@@ -131,7 +132,6 @@ export interface ExtendedTextMessageData {
 /** Остальные типы сообщений (фото, стикеры и т.д.) интерфейс не отображает */
 export interface OtherMessageData {
   typeMessage:
-    | 'quotedMessage'
     | 'imageMessage'
     | 'videoMessage'
     | 'documentMessage'

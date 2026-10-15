@@ -1,14 +1,7 @@
 import { createGreenApiClient, GreenApiError, normalizeCredentials } from '../../api/greenApi'
-import type { Credentials, StateInstance } from '../../api/types'
+import { describeInstanceState } from '../../api/instanceState'
+import type { Credentials } from '../../api/types'
 import type { Session } from '../../store/authStore'
-
-const STATE_MESSAGES: Record<Exclude<StateInstance, 'authorized'>, string> = {
-  notAuthorized: 'Инстанс не авторизован. Привяжите аккаунт в личном кабинете GREEN-API',
-  starting: 'Инстанс запускается. Попробуйте через минуту',
-  blocked: 'Аккаунт заблокирован мессенджером',
-  suspended: 'Работа инстанса приостановлена. Проверьте оплату в личном кабинете',
-  pendingPassword: 'Инстанс ждёт пароль двухэтапной аутентификации в личном кабинете',
-}
 
 export class LoginError extends Error {
   name = 'LoginError'
@@ -47,9 +40,8 @@ export async function login(input: Credentials): Promise<Session> {
     ])
     const stateInstance = account?.stateInstance ?? (await client.getStateInstance()).stateInstance
 
-    if (stateInstance !== 'authorized') {
-      throw new LoginError(STATE_MESSAGES[stateInstance] ?? `Статус инстанса: ${stateInstance}`)
-    }
+    const stateProblem = describeInstanceState(stateInstance)
+    if (stateProblem) throw new LoginError(stateProblem)
 
     return {
       credentials,

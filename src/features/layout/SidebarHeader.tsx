@@ -1,5 +1,6 @@
 import { formatPhone } from '../../lib/phone'
 import { useMessenger, useSession } from '../../store/authStore'
+import { useSyncProblem } from '../sync/syncStore'
 import styles from './SidebarHeader.module.css'
 
 interface SidebarHeaderProps {
@@ -9,15 +10,22 @@ interface SidebarHeaderProps {
 export function SidebarHeader({ onNewChat }: SidebarHeaderProps) {
   const messenger = useMessenger()
   const phone = useSession()?.account?.phone
+  const problem = useSyncProblem()
 
   return (
     <header className={styles.header}>
       <div className={styles.heading}>
         <h1 className={styles.title}>Чаты</h1>
-        <p className={styles.account}>
-          {messenger.name}
-          {phone && ` · ${formatPhone(phone)}`}
-        </p>
+        {problem ? (
+          <p className={styles.problem} role="status">
+            {problem}
+          </p>
+        ) : (
+          <p className={styles.account}>
+            {messenger.name}
+            {phone && ` · ${formatPhone(phone)}`}
+          </p>
+        )}
       </div>
       <button className={styles.add} type="button" onClick={onNewChat} aria-label="Новый чат">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
