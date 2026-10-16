@@ -4,6 +4,29 @@
 
 Тестовое задание на должность «Фронтенд-разработчик React».
 
+**Демо:** https://green-api-chat-ccop.vercel.app — войдите с данными своего инстанса GREEN-API.
+
+![Переписка](docs/screenshots/chat.webp)
+
+## Скриншоты
+
+| Вход                                 | Новый чат                                    |
+| ------------------------------------ | -------------------------------------------- |
+| ![Вход](docs/screenshots/login.webp) | ![Новый чат](docs/screenshots/new-chat.webp) |
+
+**Проверка настроек инстанса** — если уведомления выключены, приложение показывает, что мешает, и включает нужное одной кнопкой:
+
+![Баннер настроек](docs/screenshots/settings-banner.webp)
+
+**Телефон:**
+
+<p>
+  <img src="docs/screenshots/mobile-chats.webp" alt="Список чатов на телефоне" width="260">
+  <img src="docs/screenshots/mobile-chat.webp" alt="Переписка на телефоне" width="260">
+</p>
+
+На скриншотах — тестовые данные.
+
 ## Возможности
 
 - Вход по данным инстанса GREEN-API: `idInstance`, `apiTokenInstance`, `apiUrl` (подставляется сам по `idInstance`).
